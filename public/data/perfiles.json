@@ -1,0 +1,65 @@
+[
+  {
+    "id": "solera_70mm",
+    "nombre": "Solera 70mm",
+    "tipo": "solera",
+    "uso": "divisorio",
+    "medidas_mm": { "ancho": 70, "alto": 30 },
+    "espesor_chapa_mm": 0.52,
+    "largo_m": 2.6
+  },
+  {
+    "id": "montante_69mm",
+    "nombre": "Montante 69mm",
+    "tipo": "montante",
+    "uso": "divisorio",
+    "medidas_mm": { "ancho": 69, "alto": 35 },
+    "espesor_chapa_mm": 0.52,
+    "largo_m": 2.6
+  },
+  {
+    "id": "solera_100mm",
+    "nombre": "Solera 100mm",
+    "tipo": "solera",
+    "uso": "divisorio",
+    "medidas_mm": { "ancho": 100, "alto": 30 },
+    "espesor_chapa_mm": 0.52,
+    "largo_m": 2.6
+  },
+  {
+    "id": "montante_99mm",
+    "nombre": "Montante 99mm",
+    "tipo": "montante",
+    "uso": "divisorio",
+    "medidas_mm": { "ancho": 99, "alto": 35 },
+    "espesor_chapa_mm": 0.52,
+    "largo_m": 2.6
+  },
+  {
+    "id": "omega",
+    "nombre": "Perfil Omega",
+    "tipo": "omega",
+    "uso": "revestimiento",
+    "medidas_mm": { "ancho": 70, "alto": 15 },
+    "espesor_chapa_mm": 0.52,
+    "largo_m": 2.6
+  },
+  {
+    "id": "pgu_100mm",
+    "nombre": "Perfil PGU 100mm",
+    "tipo": "pgu",
+    "uso": "estructural",
+    "medidas_mm": { "ancho": 100, "alto": 40 },
+    "espesor_chapa_mm": 0.9,
+    "largo_m": 6
+  },
+  {
+    "id": "pgc_100mm",
+    "nombre": "Perfil PGC 100mm",
+    "tipo": "pgc",
+    "uso": "estructural",
+    "medidas_mm": { "ancho": 100, "alto": 40 },
+    "espesor_chapa_mm": 0.9,
+    "largo_m": 6
+  }
+]

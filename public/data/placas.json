@@ -1,0 +1,47 @@
+[
+  {
+    "id": "placa_st_12_5",
+    "nombre": "Placa de Yeso Estándar (ST) 12.5mm",
+    "tipo": "ST",
+    "espesor_mm": 12.5,
+    "ancho_m": 1.2,
+    "largo_m": 2.4,
+    "m2_por_placa": 2.88
+  },
+  {
+    "id": "placa_rh_12_5",
+    "nombre": "Placa de Yeso Resistente a Humedad (RH) 12.5mm",
+    "tipo": "RH",
+    "espesor_mm": 12.5,
+    "ancho_m": 1.2,
+    "largo_m": 2.4,
+    "m2_por_placa": 2.88
+  },
+  {
+    "id": "placa_rf_12_5",
+    "nombre": "Placa de Yeso Resistente al Fuego (RF) 12.5mm",
+    "tipo": "RF",
+    "espesor_mm": 12.5,
+    "ancho_m": 1.2,
+    "largo_m": 2.4,
+    "m2_por_placa": 2.88
+  },
+  {
+    "id": "placa_st_9_5",
+    "nombre": "Placa de Yeso Estándar (ST) 9.5mm (Cielorraso)",
+    "tipo": "ST",
+    "espesor_mm": 9.5,
+    "ancho_m": 1.2,
+    "largo_m": 2.4,
+    "m2_por_placa": 2.88
+  },
+  {
+    "id": "placa_cementicia_8",
+    "nombre": "Placa Cementicia 8mm (Exterior)",
+    "tipo": "Cementicia",
+    "espesor_mm": 8,
+    "ancho_m": 1.2,
+    "largo_m": 2.4,
+    "m2_por_placa": 2.88
+  }
+]

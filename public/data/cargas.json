@@ -1,0 +1,10 @@
+{
+  "_comment": "Valores de carga y pesos en kg/m². CIRSOC recomienda 200 para vivienda.",
+  "peso_techo_chapa_kg_m2": 15,
+  "peso_techo_teja_kg_m2": 50,
+  "peso_entrepiso_seco_kg_m2": 40,
+  "carga_uso_vivienda_kg_m2": 200,
+  "carga_uso_deposito_liviano_kg_m2": 300,
+  "factor_viento_moderado": 1.2,
+  "factor_viento_fuerte": 1.5
+}

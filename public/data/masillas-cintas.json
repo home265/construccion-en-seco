@@ -1,0 +1,26 @@
+{
+  "masilla_lista": {
+    "nombre": "Masilla Lista para Usar",
+    "descripcion": "Para tomado de juntas y recubrimiento final.",
+    "rendimiento_kg_m2": 0.9,
+    "presentacion_kg": [7, 16, 32]
+  },
+  "masilla_secado_rapido": {
+    "nombre": "Masilla de Secado Rápido en Polvo",
+    "descripcion": "Para tomado de juntas con mayor rapidez.",
+    "rendimiento_kg_m2": 0.7,
+    "presentacion_kg": [5, 10, 25]
+  },
+  "cinta_papel": {
+    "nombre": "Cinta de Papel para Juntas",
+    "descripcion": "Para uniones entre placas.",
+    "rendimiento_ml_m2": 2.5,
+    "presentacion_ml": [75, 150]
+  },
+  "cinta_tramada": {
+    "nombre": "Cinta Tramada Autoadhesiva",
+    "descripcion": "Alternativa a la cinta de papel, para reparaciones o uniones simples.",
+    "rendimiento_ml_m2": 2.5,
+    "presentacion_ml": [45, 90]
+  }
+}

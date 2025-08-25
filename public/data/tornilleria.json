@@ -1,0 +1,22 @@
+{
+  "T1_aguja": {
+    "nombre": "Tornillo T1 (punta aguja)",
+    "descripcion": "Para fijar placas a perfiles de chapa hasta 0.7mm.",
+    "rendimiento_m2": 15
+  },
+  "T2_mecha": {
+    "nombre": "Tornillo T2 (punta mecha)",
+    "descripcion": "Para unir perfiles metálicos entre sí.",
+    "rendimiento_montante": 4
+  },
+  "fijacion_8mm": {
+    "nombre": "Fijación (Tornillo y Tarugo 8mm)",
+    "descripcion": "Para fijar soleras a pisos y techos de hormigón/mampostería.",
+    "rendimiento_ml_solera": 2
+  },
+  "hexagonal_mecha": {
+    "nombre": "Tornillo Hexagonal (punta mecha)",
+    "descripcion": "Para unir perfiles estructurales de Steel Framing.",
+    "rendimiento_union": 4
+  }
+}

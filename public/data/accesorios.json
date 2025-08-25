@@ -1,0 +1,44 @@
+[
+  {
+    "id": "cantonera",
+    "nombre": "Cantonera Metálica",
+    "descripcion": "Para proteger y definir esquinas exteriores.",
+    "unidad_venta": "tira_2_6m"
+  },
+  {
+    "id": "angulo_ajuste",
+    "nombre": "Ángulo de Ajuste",
+    "descripcion": "Para terminaciones prolijas contra marcos o muros existentes.",
+    "unidad_venta": "tira_2_6m"
+  },
+  {
+    "id": "fleje_arriostramiento",
+    "nombre": "Fleje para Arriostramiento (Cruz de San Andrés)",
+    "descripcion": "Para dar rigidez a los tabiques.",
+    "unidad_venta": "rollo_10m"
+  },
+  {
+    "id": "banda_acustica",
+    "nombre": "Banda Acústica",
+    "descripcion": "Se coloca bajo las soleras para mejorar la aislación acústica.",
+    "unidad_venta": "rollo_10m"
+  },
+  {
+    "id": "anclaje_quimico",
+    "nombre": "Anclaje Químico con Varilla Roscada",
+    "descripcion": "Para fijaciones estructurales a hormigón.",
+    "unidad_venta": "unidad"
+  },
+  {
+    "id": "placa_anclaje",
+    "nombre": "Placa de Anclaje de Acero",
+    "descripcion": "Placa de acero para distribuir cargas de anclajes estructurales.",
+    "unidad_venta": "unidad"
+  },
+  {
+    "id": "angulo_anclaje",
+    "nombre": "Ángulo de Anclaje Estructural",
+    "descripcion": "Conector angular para fijaciones de corte y tracción.",
+    "unidad_venta": "unidad"
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "lana_vidrio_50mm",
+    "nombre": "Lana de Vidrio con Velo 50mm",
+    "tipo": "lana_de_vidrio",
+    "espesor_mm": 50,
+    "presentacion": {
+      "tipo": "rollo",
+      "ancho_m": 1.2,
+      "largo_m": 14,
+      "m2_por_unidad": 16.8
+    }
+  },
+  {
+    "id": "lana_vidrio_70mm",
+    "nombre": "Lana de Vidrio con Velo 70mm",
+    "tipo": "lana_de_vidrio",
+    "espesor_mm": 70,
+    "presentacion": {
+      "tipo": "rollo",
+      "ancho_m": 1.2,
+      "largo_m": 12,
+      "m2_por_unidad": 14.4
+    }
+  },
+  {
+    "id": "eps_20mm",
+    "nombre": "Plancha de Poliestireno Expandido (Telgopor) 20mm",
+    "tipo": "eps",
+    "espesor_mm": 20,
+    "presentacion": {
+      "tipo": "plancha",
+      "ancho_m": 1,
+      "largo_m": 1,
+      "m2_por_unidad": 1
+    }
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "mecanico_m10",
+    "nombre": "Anclaje Mecánico M10",
+    "tipo": "mecanico",
+    "diametro_mm": 10,
+    "resistencia_corte_kn": 10,
+    "resistencia_traccion_kn": 12
+  },
+  {
+    "id": "quimico_m12",
+    "nombre": "Anclaje Químico M12",
+    "tipo": "quimico",
+    "diametro_mm": 12,
+    "resistencia_corte_kn": 25,
+    "resistencia_traccion_kn": 30
+  },
+  {
+    "id": "quimico_m16",
+    "nombre": "Anclaje Químico M16",
+    "tipo": "quimico",
+    "diametro_mm": 16,
+    "resistencia_corte_kn": 40,
+    "resistencia_traccion_kn": 55
+  }
+]
