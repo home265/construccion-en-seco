@@ -18,6 +18,7 @@ import { loadAllCatalogs } from "@/lib/data/catalogs";
 import { calculateCielorraso } from "@/lib/calc/cielorraso";
 import { getPartida } from "@/lib/project/storage";
 import { keyToLabel, keyToUnit } from "@/components/ui/result-mappers";
+import HelpPopover from "@/components/ui/HelpPopover";
 
 // Esquema de validación para el formulario de Cielorrasos
 const formSchema = z.object({
@@ -120,11 +121,34 @@ function CielorrasoCalculator() {
         {/* Columna de Inputs */}
         <form onSubmit={handleSubmit(onSubmit)} className="card p-4 space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <NumberInput label="Largo (m)" value={watch('largo_m')} onChange={v => setValue('largo_m', v)} step={0.1} />
-            <NumberInput label="Ancho (m)" value={watch('ancho_m')} onChange={v => setValue('ancho_m', v)} step={0.1} />
+            <NumberInput 
+              label={
+                <span className="flex items-center">
+                  Largo (m)
+                  <HelpPopover>Largo de la habitación donde se instalará el cielorraso.</HelpPopover>
+                </span>
+              } 
+              value={watch('largo_m')} 
+              onChange={v => setValue('largo_m', v)} 
+              step={0.1} 
+            />
+            <NumberInput 
+              label={
+                <span className="flex items-center">
+                  Ancho (m)
+                  <HelpPopover>Ancho de la habitación donde se instalará el cielorraso.</HelpPopover>
+                </span>
+              } 
+              value={watch('ancho_m')} 
+              onChange={v => setValue('ancho_m', v)} 
+              step={0.1} 
+            />
             
             <label className="text-sm flex flex-col gap-1">
-              <span className="font-medium">Perfil Primario</span>
+              <span className="font-medium flex items-center">
+                Perfil Primario
+                <HelpPopover>Son los perfiles principales que se cuelgan del techo original. Generalmente son más robustos (ej: Montante de 70mm).</HelpPopover>
+              </span>
               <select {...register("perfilPrimarioId")} className="w-full px-3 py-2" defaultValue="">
                 <option value="" disabled>Seleccionar...</option>
                 {catalogs.perfiles.filter(p => p.uso === 'cielorraso' || p.uso === 'divisorio').map(p => (
@@ -134,7 +158,10 @@ function CielorrasoCalculator() {
             </label>
 
             <label className="text-sm flex flex-col gap-1">
-              <span className="font-medium">Perfil Secundario</span>
+              <span className="font-medium flex items-center">
+                Perfil Secundario
+                <HelpPopover>Son los perfiles que se atornillan perpendicularmente a los primarios y sobre los cuales se fijan las placas de yeso (ej: Solera de 35mm).</HelpPopover>
+              </span>
               <select {...register("perfilSecundarioId")} className="w-full px-3 py-2" defaultValue="">
                 <option value="" disabled>Seleccionar...</option>
                 {catalogs.perfiles.filter(p => p.uso === 'cielorraso' || p.uso === 'divisorio').map(p => (
@@ -144,14 +171,20 @@ function CielorrasoCalculator() {
             </label>
 
              <label className="text-sm flex flex-col gap-1">
-              <span className="font-medium">Separación Primarios</span>
+              <span className="font-medium flex items-center">
+                Separación Primarios
+                <HelpPopover>Distancia entre los ejes de los perfiles primarios. Una separación mayor requiere perfiles más resistentes.</HelpPopover>
+              </span>
               <select {...register("separacionPrimarios_cm", { valueAsNumber: true })} className="w-full px-3 py-2">
                 <option value={120}>Cada 120 cm</option>
                 <option value={80}>Cada 80 cm</option>
               </select>
             </label>
             <label className="text-sm flex flex-col gap-1">
-              <span className="font-medium">Separación Secundarios</span>
+              <span className="font-medium flex items-center">
+                Separación Secundarios
+                <HelpPopover>Distancia entre los ejes de los perfiles secundarios. Depende del espesor y tipo de placa a utilizar. 40 cm es lo más común.</HelpPopover>
+              </span>
               <select {...register("separacionSecundarios_cm", { valueAsNumber: true })} className="w-full px-3 py-2">
                 <option value={40}>Cada 40 cm</option>
                 <option value={60}>Cada 60 cm</option>
@@ -159,7 +192,10 @@ function CielorrasoCalculator() {
             </label>
 
             <label className="text-sm flex flex-col gap-1 col-span-2">
-              <span className="font-medium">Tipo de Placa</span>
+              <span className="font-medium flex items-center">
+                Tipo de Placa
+                <HelpPopover>Elige el tipo de placa de yeso según las necesidades del ambiente (ej: estándar, resistente a la humedad para baños/cocinas, etc.).</HelpPopover>
+              </span>
               <select {...register("placaId")} className="w-full px-3 py-2" defaultValue="">
                 <option value="" disabled>Seleccionar...</option>
                 {catalogs.placas.map(p => (
@@ -169,7 +205,16 @@ function CielorrasoCalculator() {
             </label>
           </div>
           
-          <NumberInput label="Desperdicio (%)" value={watch('desperdicioPct')} onChange={v => setValue('desperdicioPct', v)} />
+          <NumberInput 
+            label={
+              <span className="flex items-center">
+                Desperdicio (%)
+                <HelpPopover>Porcentaje de material extra para compensar cortes, roturas o errores. Un valor típico para construcción en seco es entre 10% y 15%.</HelpPopover>
+              </span>
+            } 
+            value={watch('desperdicioPct')} 
+            onChange={v => setValue('desperdicioPct', v)} 
+          />
 
           <div className="flex gap-2 pt-2">
             <button type="submit" className="btn">Calcular</button>

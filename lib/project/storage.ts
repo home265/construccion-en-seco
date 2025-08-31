@@ -139,7 +139,8 @@ export async function updatePartida(
   return next;
 }
 
-export async function removePartida(projectId: string, partidaId: string): Promise<void> {
+// --- ESTA ES LA FUNCIÓN CORREGIDA ---
+export async function removePartidaById(projectId: string, partidaId: string): Promise<void> {
   const p = await getProject(projectId);
   if (!p) return;
   const partes = p.partes.filter((x) => x.id !== partidaId);

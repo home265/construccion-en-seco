@@ -1,26 +1,22 @@
 // app/proyecto/[id]/export/page.tsx
 "use client";
-
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import { getProject } from "@/lib/project/storage";
 import { aggregateMaterials } from "@/lib/project/compute";
-import type { Project } from "@/lib/project/types";
+import type { Project as DBProject } from "@/lib/db"; // Asumiendo que Bob Seco también usa lib/db
 
 export default function ProyectoExportPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
 
-  const [project, setProject] = useState<Project | null>(null);
+  const [project, setProject] = useState<DBProject | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Cargar proyecto (async con Dexie)
+  // Carga inicial
   useEffect(() => {
-    let mounted = true;
     (async () => {
       const p = await getProject(id);
-      if (!mounted) return;
       if (!p) {
         router.replace("/proyecto");
         return;
@@ -28,128 +24,134 @@ export default function ProyectoExportPage() {
       setProject(p);
       setLoading(false);
     })();
-    return () => {
-      mounted = false;
-    };
   }, [id, router]);
 
+  const mat = useMemo(() => (project ? aggregateMaterials(project) : []), [project]);
+  const date = new Date().toLocaleDateString("es-AR", {
+    year: 'numeric', month: 'long', day: 'numeric'
+  });
+
+  function onPrint() {
+    window.print();
+  }
+
   if (loading) {
-    return <div className="text-center p-8">Cargando proyecto…</div>;
+    return <div className="p-6 text-center">Cargando vista previa...</div>;
   }
   if (!project) return null;
 
-  const mat = aggregateMaterials(project);
-  const date = new Date().toLocaleDateString("es-AR");
-
   return (
-    // En pantalla: fondo de la app; al imprimir: blanco, sin márgenes
-    <div className="mx-auto max-w-4xl bg-background print:bg-white text-foreground print:text-black">
-      {/* Botonera (no se imprime) */}
-      <div className="print:hidden flex justify-between items-center mb-4 p-4">
-        <button onClick={() => router.back()} className="btn-secondary">
-          ← Volver
+    // Estilos para modo claro (light mode) para una mejor impresión
+    <div className="mx-auto max-w-4xl p-8 print:p-0 bg-white text-gray-800 font-sans">
+      <style jsx global>{`
+        @media print {
+          .no-print { display: none !important; }
+          body { 
+            background: #ffffff !important; 
+            color: #111827 !important; 
+          }
+          @page { 
+            size: A4; 
+            margin: 1.5cm; 
+          }
+        }
+        .header-title { font-size: 24px; font-weight: 700; color: #1a202c; }
+        .project-details { color: #4a5568; }
+        .section-title { 
+          font-size: 18px; 
+          font-weight: 600; 
+          margin-top: 2rem; 
+          margin-bottom: 0.5rem; 
+          border-bottom: 2px solid #e2e8f0; 
+          padding-bottom: 0.25rem; 
+          color: #2d3748;
+        }
+        .materials-table { 
+          width: 100%; 
+          border-collapse: collapse; 
+          font-size: 12px; 
+        }
+        .materials-table th, .materials-table td { 
+          padding: 8px 4px; 
+          text-align: left;
+        }
+        .materials-table thead th { 
+          color: #718096; 
+          border-bottom: 1px solid #cbd5e0; 
+          font-weight: 600;
+        }
+        .materials-table tbody tr:nth-child(even) { 
+          background-color: #f7fafc; 
+        }
+        .materials-table .text-right {
+          text-align: right;
+        }
+        .footer-note { 
+          margin-top: 3rem; 
+          padding-top: 1rem;
+          border-top: 1px solid #e2e8f0;
+          font-size: 10px; 
+          color: #a0aec0; 
+          text-align: center; 
+        }
+      `}</style>
+
+      <div className="no-print mb-6 flex justify-between items-center bg-gray-100 p-4 rounded-lg shadow-sm">
+        <button 
+          onClick={() => router.back()} 
+          className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded transition-colors"
+        >
+          ← Volver al Proyecto
         </button>
-        <div className="flex gap-2">
-          <Link className="btn-secondary" href={`/proyecto/${project.id}`}>
-            Ver Proyecto
-          </Link>
-          <button onClick={() => window.print()} className="btn">
-            Imprimir / Guardar PDF
-          </button>
+        <button 
+          onClick={onPrint} 
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+        >
+          Imprimir
+        </button>
+      </div>
+
+      {/* Encabezado del Documento */}
+      <header className="mb-8">
+        <h1 className="header-title">{project.name}</h1>
+        <div className="project-details mt-2 space-y-1">
+          {project.client && <div><strong>Cliente:</strong> {project.client}</div>}
+          {project.siteAddress && <div><strong>Obra:</strong> {project.siteAddress}</div>}
+          <div><strong>Fecha de Emisión:</strong> {date}</div>
         </div>
-      </div>
+      </header>
 
-      {/* Contenido del reporte */}
-      <div className="p-8 border border-border rounded-lg print:border-none">
-        {/* Encabezado */}
-        <header className="mb-8 pb-4 border-b border-border print:border-gray-200">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold">Cómputo de Materiales</h1>
-              <div className="text-foreground/70 print:text-gray-600">
-                <p>
-                  Proyecto: <strong>{project.name}</strong>
-                </p>
-                {project.client && <p>Cliente: {project.client}</p>}
-                {project.siteAddress && <p>Obra: {project.siteAddress}</p>}
-                <p>Fecha de Emisión: {date}</p>
-              </div>
-            </div>
-            {project.logoUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={project.logoUrl}
-                alt="Logo"
-                className="max-w-[120px] max-h-[80px] print:block hidden"
-              />
-            )}
-          </div>
-        </header>
-
-        {/* Resumen de Materiales */}
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold mb-3">Resumen de Materiales</h2>
-          {mat.length === 0 ? (
-            <p className="text-sm text-foreground/60 print:text-gray-500">Sin materiales aún.</p>
-          ) : (
-            <table className="w-full text-sm text-left">
-              <thead className="text-foreground/60 print:text-gray-500">
-                <tr className="border-b border-border print:border-gray-200">
-                  <th className="py-2 font-medium">Material</th>
-                  <th className="py-2 font-medium text-right">Cantidad</th>
-                  <th className="py-2 font-medium pl-4">Unidad</th>
+      {/* Resumen de Materiales */}
+      <section>
+        <h2 className="section-title">Resumen de Materiales</h2>
+        {mat.length === 0 ? (
+          <div className="project-details">No hay materiales computados en este proyecto.</div>
+        ) : (
+          <table className="materials-table">
+            <thead>
+              <tr>
+                <th>Material</th>
+                <th className="text-right">Cantidad</th>
+                <th style={{ paddingLeft: '1rem' }}>Unidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              {mat.map((m, i) => (
+                <tr key={`${m.key}-${i}`}>
+                  <td>{m.label}</td>
+                  <td className="text-right">{m.qty.toLocaleString('es-AR')}</td>
+                  <td style={{ paddingLeft: '1rem' }}>{m.unit}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {mat.map((m, i) => (
-                  <tr
-                    key={`${m.key ?? `${m.label}-${m.unit}`}-${i}`}
-                    className="border-b border-border print:border-gray-200"
-                  >
-                    <td className="py-2">{m.label}</td>
-                    <td className="py-2 text-right font-medium">{m.qty}</td>
-                    <td className="py-2 pl-4">{m.unit}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </section>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
 
-        {/* Detalle de Partidas */}
-        <section>
-          <h2 className="text-xl font-semibold mb-3">Partidas Incluidas</h2>
-          {project.partes.length === 0 ? (
-            <p className="text-sm text-foreground/60 print:text-gray-500">No hay partidas cargadas.</p>
-          ) : (
-            <table className="w-full text-sm text-left">
-              <thead className="text-foreground/60 print:text-gray-500">
-                <tr className="border-b border-border print:border-gray-200">
-                  <th className="py-2 font-medium">Descripción</th>
-                  <th className="py-2 font-medium">Tipo</th>
-                  <th className="py-2 font-medium">Fecha</th>
-                </tr>
-              </thead>
-              <tbody>
-                {project.partes.map((part) => (
-                  <tr key={part.id} className="border-b border-border print:border-gray-200">
-                    <td className="py-2">{part.title}</td>
-                    <td className="py-2">{part.kind}</td>
-                    <td className="py-2">
-                      {new Date(part.createdAt).toLocaleDateString("es-AR")}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </section>
-
-        <footer className="mt-8 pt-4 border-t border-border print:border-gray-200 text-xs text-foreground/60 print:text-gray-500">
-          * Documento generado automáticamente para estimación de materiales. No reemplaza memorias
-          de cálculo ni cómputos profesionales.
-        </footer>
-      </div>
+      {/* Pie de Página */}
+      <footer className="footer-note">
+        <p>Este documento fue generado por Bob Seco. Los cálculos son una estimación y deben ser verificados por un profesional.</p>
+      </footer>
     </div>
   );
 }

@@ -19,6 +19,7 @@ import { loadAllCatalogs } from "@/lib/data/catalogs";
 import { calculateRevestimiento } from "@/lib/calc/revestimiento";
 import { getPartida } from "@/lib/project/storage";
 import { keyToLabel, keyToUnit } from "@/components/ui/result-mappers";
+import HelpPopover from "@/components/ui/HelpPopover";
 
 // Esquema de validación para el formulario de Revestimientos
 const formSchema = z.object({
@@ -119,11 +120,34 @@ function RevestimientoCalculator() {
         {/* Columna de Inputs */}
         <form onSubmit={handleSubmit(onSubmit)} className="card p-4 space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <NumberInput label="Largo (m)" value={watch('largo_m')} onChange={v => setValue('largo_m', v)} step={0.1} />
-            <NumberInput label="Alto (m)" value={watch('alto_m')} onChange={v => setValue('alto_m', v)} step={0.1} />
+            <NumberInput 
+              label={
+                <span className="flex items-center">
+                  Largo (m)
+                  <HelpPopover>Largo total de la pared que se va a revestir.</HelpPopover>
+                </span>
+              } 
+              value={watch('largo_m')} 
+              onChange={v => setValue('largo_m', v)} 
+              step={0.1} 
+            />
+            <NumberInput 
+              label={
+                <span className="flex items-center">
+                  Alto (m)
+                  <HelpPopover>Altura de la pared que se va a revestir.</HelpPopover>
+                </span>
+              } 
+              value={watch('alto_m')} 
+              onChange={v => setValue('alto_m', v)} 
+              step={0.1} 
+            />
             
             <label className="text-sm flex flex-col gap-1 col-span-2">
-              <span className="font-medium">Método de Revestimiento</span>
+              <span className="font-medium flex items-center">
+                Método de Revestimiento
+                <HelpPopover>Elige "Sobre Perfil Omega" para fijar las placas a una estructura metálica, ideal para muros irregulares. Elige "Directo a Muro" para pegar las placas directamente a una pared lisa.</HelpPopover>
+              </span>
               <select {...register("tipoRevestimiento")} className="w-full px-3 py-2">
                 <option value="omega">Sobre Perfil Omega</option>
                 <option value="directo">Directo a Muro (con adhesivo)</option>
@@ -133,7 +157,10 @@ function RevestimientoCalculator() {
             {tipoRevestimientoSeleccionado === 'omega' && (
               <>
                 <label className="text-sm flex flex-col gap-1">
-                  <span className="font-medium">Perfil Omega</span>
+                  <span className="font-medium flex items-center">
+                    Perfil Omega
+                    <HelpPopover>Perfil metálico que se fija al muro para crear la estructura de soporte para las placas.</HelpPopover>
+                  </span>
                   <select {...register("perfilOmegaId")} className="w-full px-3 py-2" defaultValue="">
                      <option value="" disabled>Seleccionar...</option>
                     {catalogs.perfiles.filter(p => p.tipo === 'omega').map(p => (
@@ -142,7 +169,10 @@ function RevestimientoCalculator() {
                   </select>
                 </label>
                 <label className="text-sm flex flex-col gap-1">
-                  <span className="font-medium">Separación Omegas</span>
+                  <span className="font-medium flex items-center">
+                    Separación Omegas
+                    <HelpPopover>Distancia entre los ejes de los perfiles Omega. Una separación de 40 cm es estándar para mayor rigidez.</HelpPopover>
+                  </span>
                   <select {...register("separacionOmegas_cm", { valueAsNumber: true })} className="w-full px-3 py-2">
                     <option value={40}>Cada 40 cm</option>
                     <option value={60}>Cada 60 cm</option>
@@ -152,7 +182,10 @@ function RevestimientoCalculator() {
             )}
             
             <label className="text-sm flex flex-col gap-1 col-span-2">
-              <span className="font-medium">Tipo de Placa</span>
+              <span className="font-medium flex items-center">
+                Tipo de Placa
+                <HelpPopover>Selecciona la placa a utilizar. Para exteriores o zonas húmedas, se recomiendan placas cementicias o RH (resistentes a la humedad).</HelpPopover>
+              </span>
               <select {...register("placaId")} className="w-full px-3 py-2" defaultValue="">
                 <option value="" disabled>Seleccionar...</option>
                 {catalogs.placas.map(p => (
@@ -163,11 +196,23 @@ function RevestimientoCalculator() {
           </div>
           
           <div className="space-y-2">
-            <h3 className="font-medium">Vanos a Descontar (Puertas/Ventanas)</h3>
+            <h3 className="font-medium flex items-center">
+              Vanos a Descontar (Puertas/Ventanas)
+              <HelpPopover>Aquí puedes restar el área de aberturas para no computar materiales de más. Ingresa las medidas de cada puerta o ventana.</HelpPopover>
+            </h3>
             <OpeningsGroup items={vanos} onChange={setVanos} />
           </div>
 
-          <NumberInput label="Desperdicio (%)" value={watch('desperdicioPct')} onChange={v => setValue('desperdicioPct', v)} />
+          <NumberInput 
+            label={
+              <span className="flex items-center">
+                Desperdicio (%)
+                <HelpPopover>Porcentaje de material extra para compensar cortes y ajustes. Un valor típico es entre 10% y 15%.</HelpPopover>
+              </span>
+            } 
+            value={watch('desperdicioPct')} 
+            onChange={v => setValue('desperdicioPct', v)} 
+          />
 
           <div className="flex gap-2 pt-2">
             <button type="submit" className="btn">Calcular</button>

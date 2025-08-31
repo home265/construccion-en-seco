@@ -19,6 +19,7 @@ import { loadAllCatalogs } from "@/lib/data/catalogs";
 import { calculateEntrepiso } from "@/lib/calc/entrepiso";
 import { getPartida } from "@/lib/project/storage";
 import { keyToLabel, keyToUnit } from "@/components/ui/result-mappers";
+import HelpPopover from "@/components/ui/HelpPopover";
 
 // 1. Nuevo Esquema de Validación para Muros Estructurales
 const formSchema = z.object({
@@ -111,18 +112,41 @@ function MuroEstructuralCalculator() {
 
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-semibold">Calculadora de Muros Portantes (Steel Framing)</h1>
+      {/* Título ajustado para coincidir con los campos y la funcionalidad */}
+      <h1 className="text-2xl font-semibold">Calculadora de Entrepisos (Steel Framing)</h1>
       
       <div className="grid md:grid-cols-2 gap-6">
         {/* Columna de Inputs */}
         <form onSubmit={handleSubmit(onSubmit)} className="card p-4 space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            {/* 3. Nuevos Inputs para el formulario */}
-            <NumberInput label="Largo (m)" value={watch('largo_m')} onChange={v => setValue('largo_m', v)} step={0.1} />
-            <NumberInput label="Ancho (m)" value={watch('ancho_m')} onChange={v => setValue('ancho_m', v)} step={0.1} />
+            <NumberInput 
+              label={
+                <span className="flex items-center">
+                  Largo (m)
+                  <HelpPopover>Largo total del entrepiso a construir, en la dirección de las vigas principales (PGC).</HelpPopover>
+                </span>
+              } 
+              value={watch('largo_m')} 
+              onChange={v => setValue('largo_m', v)} 
+              step={0.1} 
+            />
+            <NumberInput 
+              label={
+                <span className="flex items-center">
+                  Ancho (m)
+                  <HelpPopover>Ancho total del entrepiso. Sobre esta dimensión se distribuirán las vigas.</HelpPopover>
+                </span>
+              } 
+              value={watch('ancho_m')} 
+              onChange={v => setValue('ancho_m', v)} 
+              step={0.1} 
+            />
             
             <label className="text-sm flex flex-col gap-1">
-              <span className="font-medium">Perfil Vigas (PGC)</span>
+              <span className="font-medium flex items-center">
+                Perfil Vigas (PGC)
+                <HelpPopover>Perfil principal que funcionará como viga o "joist". La elección depende de la luz a cubrir y las cargas.</HelpPopover>
+              </span>
               <select {...register("perfilVigaId")} className="w-full px-3 py-2" defaultValue="">
                 <option value="" disabled>Seleccionar...</option>
                 {catalogs.perfiles.filter(p => p.uso === 'estructural' && p.tipo === 'pgc').map(p => (
@@ -132,7 +156,10 @@ function MuroEstructuralCalculator() {
             </label>
 
             <label className="text-sm flex flex-col gap-1">
-              <span className="font-medium">Perfil Bordes (PGU)</span>
+              <span className="font-medium flex items-center">
+                Perfil Bordes (PGU)
+                <HelpPopover>Perfil perimetral que funciona como solera o "track" donde se apoyan y fijan las vigas PGC.</HelpPopover>
+              </span>
               <select {...register("perfilBordeId")} className="w-full px-3 py-2" defaultValue="">
                 <option value="" disabled>Seleccionar...</option>
                 {catalogs.perfiles.filter(p => p.uso === 'estructural' && p.tipo === 'pgu').map(p => (
@@ -142,7 +169,10 @@ function MuroEstructuralCalculator() {
             </label>
 
             <label className="text-sm flex flex-col gap-1">
-              <span className="font-medium">Separación Vigas</span>
+              <span className="font-medium flex items-center">
+                Separación Vigas
+                <HelpPopover>Distancia entre los ejes de las vigas PGC. Una menor separación brinda mayor rigidez y capacidad de carga.</HelpPopover>
+              </span>
               <select {...register("separacionVigas_cm", { valueAsNumber: true })} className="w-full px-3 py-2">
                 <option value={40}>Cada 40 cm</option>
                 <option value={60}>Cada 60 cm</option>
@@ -150,7 +180,10 @@ function MuroEstructuralCalculator() {
             </label>
 
             <label className="text-sm flex flex-col gap-1">
-              <span className="font-medium">Cubierta Superior</span>
+              <span className="font-medium flex items-center">
+                Cubierta Superior
+                <HelpPopover>Placa o tablero que se fija sobre las vigas para formar la superficie del entrepiso.</HelpPopover>
+              </span>
               <select {...register("tipoCubierta")} className="w-full px-3 py-2">
                 <option value="osb">Placa OSB</option>
                 <option value="fenolico">Placa Fenólico</option>
@@ -159,7 +192,16 @@ function MuroEstructuralCalculator() {
             </label>
           </div>
           
-          <NumberInput label="Desperdicio (%)" value={watch('desperdicioPct')} onChange={v => setValue('desperdicioPct', v)} />
+          <NumberInput 
+            label={
+              <span className="flex items-center">
+                Desperdicio (%)
+                <HelpPopover>Porcentaje de material extra para compensar cortes y ajustes. Un valor típico es entre 10% y 15%.</HelpPopover>
+              </span>
+            } 
+            value={watch('desperdicioPct')} 
+            onChange={v => setValue('desperdicioPct', v)} 
+          />
 
           <div className="flex gap-2 pt-2">
             <button type="submit" className="btn">Calcular</button>
@@ -170,7 +212,6 @@ function MuroEstructuralCalculator() {
         <div className="space-y-4">
           <ResultTable title="Materiales Estimados" items={resultRows} />
 
-          {/* 4. Resultado con Advertencia */}
           {result?.notaImportante && (
             <div className="p-4 rounded-lg bg-yellow-900/50 border border-yellow-700 text-yellow-300 text-sm">
               <p className="font-bold mb-1">¡Atención!</p>

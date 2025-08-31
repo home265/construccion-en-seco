@@ -64,10 +64,11 @@ export default function OpeningsGroup({ items, onChange }: Props) {
           </div>
         ))}
       </div>
+      {/* --- LÍNEA CORREGIDA --- */}
       <button
         type="button"
         onClick={addItem}
-        className="btn-secondary text-sm"
+        className="btn btn-secondary text-sm" // Se añade la clase 'btn'
       >
         + Agregar vano
       </button>

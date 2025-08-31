@@ -1,6 +1,8 @@
 // lib/db.ts
 import Dexie, { type Table } from "dexie";
-import type { Project } from "./project/types";
+// Importamos los tipos desde su archivo de origen y los re-exportamos para que otros archivos los puedan usar.
+import type { Project, Partida } from "./project/types";
+export type { Project, Partida };
 
 export class AppDatabase extends Dexie {
   // Tabla: projects (clave primaria: id)
@@ -18,5 +20,6 @@ export class AppDatabase extends Dexie {
   }
 }
 
-// Instancia única para usar en toda la app
+// --- LÍNEA CORREGIDA ---
+// Instancia única para usar en toda la app (con un solo 'new')
 export const db = new AppDatabase();

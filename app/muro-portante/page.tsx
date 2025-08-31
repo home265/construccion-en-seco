@@ -16,6 +16,7 @@ import { loadAllCatalogs } from "@/lib/data/catalogs";
 import { calculateMuroPortante } from "@/lib/calc/muro-portante";
 import { getPartida } from "@/lib/project/storage";
 import { keyToLabel, keyToUnit } from "@/components/ui/result-mappers";
+import HelpPopover from "@/components/ui/HelpPopover";
 
 const formSchema = z.object({
   largo_m: z.number().min(0.1),
@@ -102,17 +103,60 @@ function MuroPortanteCalculator() {
           <div>
             <h3 className="font-medium mb-2">Dimensiones del Muro</h3>
             <div className="grid grid-cols-2 gap-4">
-              <NumberInput label="Largo (m)" value={watch('largo_m')} onChange={v => setValue('largo_m', v)} step={0.1} />
-              <NumberInput label="Alto (m)" value={watch('alto_m')} onChange={v => setValue('alto_m', v)} step={0.1} />
+              <NumberInput 
+                label={
+                  <span className="flex items-center">
+                    Largo (m)
+                    <HelpPopover>Longitud total del muro que estás calculando.</HelpPopover>
+                  </span>
+                } 
+                value={watch('largo_m')} 
+                onChange={v => setValue('largo_m', v)} 
+                step={0.1} 
+              />
+              <NumberInput 
+                label={
+                  <span className="flex items-center">
+                    Alto (m)
+                    <HelpPopover>Altura del muro, generalmente de piso a techo.</HelpPopover>
+                  </span>
+                } 
+                value={watch('alto_m')} 
+                onChange={v => setValue('alto_m', v)} 
+                step={0.1} 
+              />
             </div>
           </div>
           <div>
             <h3 className="font-medium mb-2">Cargas del Entrepiso Superior</h3>
             <div className="grid grid-cols-2 gap-4">
-               <NumberInput label="Ancho Apoyo (m)" value={watch('entrepiso_ancho_apoyo_m')} onChange={v => setValue('entrepiso_ancho_apoyo_m', v)} step={0.1} />
-              <NumberInput label="Largo Apoyo (m)" value={watch('entrepiso_largo_apoyo_m')} onChange={v => setValue('entrepiso_largo_apoyo_m', v)} step={0.1} />
+               <NumberInput 
+                label={
+                  <span className="flex items-center">
+                    Ancho Apoyo (m)
+                    <HelpPopover>Es la mitad del ancho del área que apoya sobre el muro. Por ejemplo, si el entrepiso tiene 4m de ancho y el muro está en el medio, el ancho de apoyo es 2m.</HelpPopover>
+                  </span>
+                } 
+                value={watch('entrepiso_ancho_apoyo_m')} 
+                onChange={v => setValue('entrepiso_ancho_apoyo_m', v)} 
+                step={0.1} 
+              />
+              <NumberInput 
+                label={
+                  <span className="flex items-center">
+                    Largo Apoyo (m)
+                    <HelpPopover>Es la mitad de la distancia entre columnas o muros perpendiculares. Por ejemplo, si las columnas están cada 3m, el largo de apoyo es 1.5m.</HelpPopover>
+                  </span>
+                } 
+                value={watch('entrepiso_largo_apoyo_m')} 
+                onChange={v => setValue('entrepiso_largo_apoyo_m', v)} 
+                step={0.1} 
+              />
               <label className="text-sm flex flex-col gap-1 col-span-2">
-                <span className="font-medium">Terminación del Entrepiso</span>
+                <span className="font-medium flex items-center">
+                  Terminación del Entrepiso
+                  <HelpPopover>Elige el tipo de cubierta del entrepiso superior, ya que su peso afecta la carga sobre el muro.</HelpPopover>
+                </span>
                 <select {...register("entrepiso_tipo_cubierta")} className="w-full px-3 py-2">
                   <option value="osb">Placa OSB o Fenólico</option>
                   <option value="placa_cementicia">Placa Cementicia</option>
@@ -125,11 +169,17 @@ function MuroPortanteCalculator() {
              <h3 className="font-medium mb-2">Otras Cargas</h3>
             <div className="flex items-center gap-4">
                 <input type="checkbox" {...register("tieneTechoArriba")} id="tieneTecho" />
-                <label htmlFor="tieneTecho" className="text-sm font-medium">Soporta un techo arriba</label>
+                <label htmlFor="tieneTecho" className="text-sm font-medium flex items-center">
+                  Soporta un techo arriba
+                  <HelpPopover>Marca esta opción si sobre este muro, además del entrepiso, apoya la estructura del techo final.</HelpPopover>
+                </label>
             </div>
             {watch('tieneTechoArriba') && (
               <label className="text-sm flex flex-col gap-1 mt-4">
-                <span className="font-medium">Tipo de Techo</span>
+                <span className="font-medium flex items-center">
+                  Tipo de Techo
+                  <HelpPopover>El peso del techo (chapa vs. teja) es una carga importante a considerar para el muro.</HelpPopover>
+                </span>
                 <select {...register("techo_tipo")} className="w-full px-3 py-2">
                   <option value="chapa">Techo de Chapa (Liviano)</option>
                   <option value="teja">Techo de Teja (Pesado)</option>
@@ -140,14 +190,26 @@ function MuroPortanteCalculator() {
            <div>
             <h3 className="font-medium mb-2">Configuración del Muro</h3>
              <label className="text-sm flex flex-col gap-1 col-span-2">
-                <span className="font-medium">Tipo de Placa (Emplacado)</span>
+                <span className="font-medium flex items-center">
+                  Tipo de Placa (Emplacado)
+                  <HelpPopover>Selecciona la placa con la que se revestirá el muro. Esto se usa para calcular la cantidad de placas y tornillos.</HelpPopover>
+                </span>
                 <select {...register("placaId")} className="w-full px-3 py-2" defaultValue="">
                     <option value="" disabled>Seleccionar...</option>
                     {catalogs.placas.map(p => ( <option key={p.id} value={p.id}>{p.nombre}</option>))}
                 </select>
             </label>
             <div className="mt-4">
-                <NumberInput label="Desperdicio (%)" value={watch('desperdicioPct')} onChange={v => setValue('desperdicioPct', v)} />
+                <NumberInput 
+                  label={
+                    <span className="flex items-center">
+                      Desperdicio (%)
+                      <HelpPopover>Porcentaje de material extra para compensar cortes y ajustes. Un valor típico es entre 10% y 15%.</HelpPopover>
+                    </span>
+                  } 
+                  value={watch('desperdicioPct')} 
+                  onChange={v => setValue('desperdicioPct', v)} 
+                />
             </div>
           </div>
 

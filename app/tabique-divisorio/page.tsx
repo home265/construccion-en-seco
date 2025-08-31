@@ -21,6 +21,7 @@ import { loadAllCatalogs } from "@/lib/data/catalogs";
 import { calculateTabique } from "@/lib/calc/tabique";
 import { getPartida } from "@/lib/project/storage";
 import { keyToLabel, keyToUnit } from "@/components/ui/result-mappers";
+import HelpPopover from "@/components/ui/HelpPopover";
 
 // El esquema de validación ahora es más simple
 const formSchema = z.object({
@@ -153,11 +154,34 @@ function TabiqueCalculator() {
       <div className="grid md:grid-cols-2 gap-6">
         <form onSubmit={handleSubmit(onSubmit)} className="card p-4 space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <NumberInput label="Largo (m)" value={watch('largo_m')} onChange={v => setValue('largo_m', v)} step={0.1} />
-            <NumberInput label="Alto (m)" value={watch('alto_m')} onChange={v => setValue('alto_m', v)} step={0.1} />
+            <NumberInput 
+              label={
+                <span className="flex items-center">
+                  Largo (m)
+                  <HelpPopover>Longitud total del tabique a construir.</HelpPopover>
+                </span>
+              } 
+              value={watch('largo_m')} 
+              onChange={v => setValue('largo_m', v)} 
+              step={0.1} 
+            />
+            <NumberInput 
+              label={
+                <span className="flex items-center">
+                  Alto (m)
+                  <HelpPopover>Altura del tabique, generalmente de piso a techo.</HelpPopover>
+                </span>
+              } 
+              value={watch('alto_m')} 
+              onChange={v => setValue('alto_m', v)} 
+              step={0.1} 
+            />
             
             <label className="text-sm flex flex-col gap-1">
-              <span className="font-medium">Perfil (Montante/Solera)</span>
+              <span className="font-medium flex items-center">
+                Perfil (Montante/Solera)
+                <HelpPopover>Selecciona el ancho del perfil. La app calculará tanto las Soleras (horizontales) como los Montantes (verticales) del mismo ancho.</HelpPopover>
+              </span>
               <select {...register("perfilId")} className="w-full px-3 py-2">
                 {catalogs.perfiles.filter(p => p.uso === 'divisorio' && p.tipo === 'montante').map(p => (
                   <option key={p.id} value={p.id}>{p.nombre}</option>
@@ -166,7 +190,10 @@ function TabiqueCalculator() {
             </label>
 
             <label className="text-sm flex flex-col gap-1">
-              <span className="font-medium">Separación Montantes</span>
+              <span className="font-medium flex items-center">
+                Separación Montantes
+                <HelpPopover>Distancia entre los ejes de los perfiles verticales (montantes). La separación estándar es de 40 cm para mayor rigidez.</HelpPopover>
+              </span>
               <select {...register("separacionMontantes_cm", { valueAsNumber: true })} className="w-full px-3 py-2">
                 <option value={40}>Cada 40 cm</option>
                 <option value={60}>Cada 60 cm</option>
@@ -174,7 +201,10 @@ function TabiqueCalculator() {
             </label>
 
             <label className="text-sm flex flex-col gap-1 col-span-2">
-              <span className="font-medium">Tipo de Placa</span>
+              <span className="font-medium flex items-center">
+                Tipo de Placa
+                <HelpPopover>Elige la placa de yeso a utilizar. La placa RH (verde) es para ambientes húmedos como baños y cocinas.</HelpPopover>
+              </span>
               <select {...register("placaId")} className="w-full px-3 py-2">
                 {catalogs.placas.map(p => (
                   <option key={p.id} value={p.id}>{p.nombre}</option>
@@ -185,17 +215,26 @@ function TabiqueCalculator() {
           
           <div className="flex items-center gap-4">
               <input type="checkbox" {...register("esDoblePlaca")} id="doblePlaca" />
-              <label htmlFor="doblePlaca" className="text-sm font-medium">Usar doble placa por cara</label>
+              <label htmlFor="doblePlaca" className="text-sm font-medium flex items-center">
+                Usar doble placa por cara
+                <HelpPopover>Marcar esta opción si se requiere mayor resistencia al impacto o mejor aislación acústica, colocando dos placas por cada lado del tabique.</HelpPopover>
+              </label>
           </div>
           
           <div className="flex items-center gap-4">
               <input type="checkbox" {...register("llevaAislante")} id="conAislante" />
-              <label htmlFor="conAislante" className="text-sm font-medium">Agregar aislación interior</label>
+              <label htmlFor="conAislante" className="text-sm font-medium flex items-center">
+                Agregar aislación interior
+                <HelpPopover>Añade un material aislante (como lana de vidrio) en el interior del tabique para mejorar el confort térmico y acústico.</HelpPopover>
+              </label>
           </div>
           
           {watch('llevaAislante') && (
             <label className="text-sm flex flex-col gap-1">
-              <span className="font-medium">Tipo de Aislante</span>
+              <span className="font-medium flex items-center">
+                Tipo de Aislante
+                <HelpPopover>Selecciona el tipo y espesor del material aislante que se colocará dentro de la estructura de perfiles.</HelpPopover>
+              </span>
               <select {...register("aislanteId")} className="w-full px-3 py-2">
                 {catalogs.aislantes.map(a => (
                   <option key={a.id} value={a.id}>{a.nombre}</option>
@@ -205,15 +244,27 @@ function TabiqueCalculator() {
           )}
           
           <div className="space-y-2">
-            <h3 className="font-medium">Vanos a Descontar (Puertas/Ventanas)</h3>
+            <h3 className="font-medium flex items-center">
+              Vanos a Descontar (Puertas/Ventanas)
+              <HelpPopover>Agrega aquí las aberturas para descontar el área de placas, aunque los perfiles para el vano sí se computarán.</HelpPopover>
+            </h3>
             <OpeningsGroup items={vanos} onChange={setVanos} />
           </div>
 
-          <NumberInput label="Desperdicio (%)" value={watch('desperdicioPct')} onChange={v => setValue('desperdicioPct', v)} />
+          <NumberInput 
+            label={
+              <span className="flex items-center">
+                Desperdicio (%)
+                <HelpPopover>Porcentaje de material extra para compensar cortes y ajustes. Un valor recomendado es entre 10% y 15%.</HelpPopover>
+              </span>
+            } 
+            value={watch('desperdicioPct')} 
+            onChange={v => setValue('desperdicioPct', v)} 
+          />
 
           <div className="flex gap-2 pt-2">
             <button type="submit" className="btn">Calcular</button>
-            <button type="button" onClick={addCurrentToBatch} className="btn-secondary">Añadir al lote</button>
+            <button type="button" onClick={addCurrentToBatch} className="btn btn-secondary">Añadir al lote</button>
           </div>
         </form>
 
@@ -234,10 +285,12 @@ function TabiqueCalculator() {
         <AddToProject
                   kind="tabique-divisorio"
                   defaultTitle={defaultTitle}
+                  items={itemsForProject} // Corregido: Pasando los items correctos
                   raw={{
                       input: { ...getValues(), vanos },
                       result: result
-                  }} items={[]}        />
+                  }}
+        />
       )}
     </section>
   );

@@ -30,10 +30,10 @@ export default function ConfirmDialog({
   if (!open) return null;
 
   return (
-    // Fondo oscuro semi-transparente que cubre toda la pantalla
+    // Fondo oscuro semi-transparente
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
       
-      {/* Contenedor del modal con la clase 'card' para el estilo oscuro */}
+      {/* Contenedor del modal */}
       <div className="card p-6 rounded-lg w-[min(92vw,420px)] shadow-xl">
         
         {/* Título */}
@@ -42,10 +42,11 @@ export default function ConfirmDialog({
         {/* Mensaje */}
         <p className="text-sm text-foreground/70 mb-4">{message}</p>
         
-        {/* Botones */}
+        {/* --- LÍNEAS CORREGIDAS --- */}
         <div className="flex justify-end gap-2">
-          <button className="btn-secondary" onClick={onCancel}>{cancelLabel}</button>
-          <button className="btn-danger" onClick={onConfirm}>{confirmLabel}</button>
+          {/* Se añade la clase base 'btn' para que hereden el estilo redondeado */}
+          <button className="btn btn-secondary" onClick={onCancel}>{cancelLabel}</button>
+          <button className="btn btn-danger" onClick={onConfirm}>{confirmLabel}</button>
         </div>
       </div>
     </div>
