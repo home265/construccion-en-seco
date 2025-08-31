@@ -15,6 +15,8 @@ export type MaterialRow = {
 export interface Partida {
   id: string;
   createdAt: number;
+  // agregado para el guardado moderno; lo dejo opcional para no romper nada que ya funcione
+  updatedAt?: number;
   kind: string; // "tabique-divisorio", "cielorraso", etc.
   title: string;
   inputs: Record<string, any>;

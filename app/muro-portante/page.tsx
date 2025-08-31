@@ -2,7 +2,7 @@
 "use client";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
@@ -39,8 +39,10 @@ function MuroPortanteCalculator() {
   const [catalogs, setCatalogs] = useState<Catalogs | null>(null);
   const [result, setResult] = useState<MuroPortanteResult | null>(null);
   
+  // resolver tipado (evita futuros 'unknown' si cambias el esquema)
+  const formResolver: Resolver<FormValues> = zodResolver(formSchema) as Resolver<FormValues>;
   const { register, handleSubmit, watch, setValue, getValues } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: formResolver,
     defaultValues: {
       largo_m: 0,
       alto_m: 0,
@@ -56,7 +58,7 @@ function MuroPortanteCalculator() {
     loadAllCatalogs().then(setCatalogs);
   }, []);
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit: SubmitHandler<FormValues> = (data) => {
     if (!catalogs) return;
     const input: MuroPortanteInput = data;
     const calcResult = calculateMuroPortante(input, catalogs);

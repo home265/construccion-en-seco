@@ -6,9 +6,9 @@ import RegisterSW from "./register-sw";
 import AppHeader from "./components/layout/AppHeader";
 
 export const metadata: Metadata = {
-  title: "Bob Constructor - En Seco", // Título actualizado
+  title: "Bob Constructor - En Seco",
   description: "Cómputo de materiales para construcción en seco",
-  manifest: "/manifest.webmanifest" // Lo crearemos después
+  manifest: "/manifest.webmanifest"
 };
 
 export const viewport: Viewport = {
@@ -18,13 +18,33 @@ export const viewport: Viewport = {
   themeColor: "#2C3333",
 };
 
+// === Pestañas del menú (las mismas rutas que ya tenés) ===
+const TABS = [
+  { href: "/proyecto", label: "Proyectos" },
+  { href: "/tabique-divisorio", label: "Tabiques" },
+  { href: "/revestimiento", label: "Revestimiento" },
+  { href: "/cielorraso", label: "Cielorraso" },
+  { href: "/muro-portante", label: "Muro Portante" },
+  { href: "/entrepiso-estructural", label: "Entrepiso" },
+];
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es-AR">
       <body className="min-h-dvh bg-background text-foreground antialiased">
         <RegisterSW />
-        <AppHeader />
-        <main className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">{children}</main>
+
+        <AppHeader tabs={TABS} />
+
+        {/* CAMBIO: mismo contenedor que Gasista */}
+        <main className="mx-auto max-w-5xl px-4 py-6 space-y-6">
+          {children}
+        </main>
+
+        {/* Footer simple al estilo Gasista (opcional) */}
+        <footer className="mx-auto max-w-5xl px-4 py-8 text-xs text-foreground/60">
+          Funciona offline (PWA)
+        </footer>
       </body>
     </html>
   );

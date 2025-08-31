@@ -2,7 +2,7 @@
 "use client";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
@@ -29,7 +29,7 @@ const formSchema = z.object({
   perfilId: z.string().min(1, "Seleccioná un perfil"),
   placaId: z.string().min(1, "Seleccioná una placa"),
   // 👇 SIMPLIFICAMOS ESTA LÍNEA 👇
-  separacionMontantes_cm: z.coerce.number(),
+  separacionMontantes_cm: z.number(),
   esDoblePlaca: z.boolean(),
   llevaAislante: z.boolean(),
   aislanteId: z.string().optional(),
@@ -37,6 +37,14 @@ const formSchema = z.object({
 });
 
 type FormValues = z.infer<typeof formSchema>;
+
+type BatchItem = {
+  kind: "tabique-divisorio";
+  title: string;
+  materials: MaterialRow[];
+  inputs: TabiqueInput;
+  outputs: TabiqueResult;
+};
 
 function TabiqueCalculator() {
   const router = useRouter();
@@ -47,11 +55,12 @@ function TabiqueCalculator() {
   const [catalogs, setCatalogs] = useState<Catalogs | null>(null);
   const [vanos, setVanos] = useState<OpeningVM[]>([]);
   const [result, setResult] = useState<TabiqueResult | null>(null);
-  const [batch, setBatch] = useState<any[]>([]);
+  const [batch, setBatch] = useState<BatchItem[]>([]);
   const [editIndex, setEditIndex] = useState<number | null>(null);
   
+  const formResolver: Resolver<FormValues> = zodResolver(formSchema) as Resolver<FormValues>;
   const { register, handleSubmit, control, watch, setValue, getValues } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: formResolver,
     defaultValues: {
       largo_m: 0,
       alto_m: 0,
@@ -68,24 +77,26 @@ function TabiqueCalculator() {
 
   useEffect(() => {
     if (projectId && partidaId && catalogs) {
-      const partida = getPartida(projectId, partidaId);
-      if (partida && partida.inputs) {
-        const inputs = partida.inputs as any; // Usamos 'any' aquí para flexibilidad
-        setValue("largo_m", inputs.largo_m);
-        setValue("alto_m", inputs.alto_m);
-        setValue("perfilId", inputs.perfilId);
-        setValue("placaId", inputs.placaId);
-        setValue("separacionMontantes_cm", inputs.separacionMontantes_cm);
-        setValue("esDoblePlaca", inputs.esDoblePlaca);
-        setValue("llevaAislante", inputs.llevaAislante);
-        setValue("aislanteId", inputs.aislanteId);
-        setValue("desperdicioPct", inputs.desperdicioPct);
-        setVanos(inputs.vanos || []);
-      }
+      (async () => {
+        const partida = await getPartida(projectId, partidaId);
+        if (partida && partida.inputs) {
+          const inputs = partida.inputs as TabiqueInput;
+          setValue("largo_m", inputs.largo_m);
+          setValue("alto_m", inputs.alto_m);
+          setValue("perfilId", inputs.perfilId);
+          setValue("placaId", inputs.placaId);
+          setValue("separacionMontantes_cm", inputs.separacionMontantes_cm);
+          setValue("esDoblePlaca", inputs.esDoblePlaca);
+          setValue("llevaAislante", inputs.llevaAislante);
+          setValue("aislanteId", inputs.aislanteId);
+          setValue("desperdicioPct", inputs.desperdicioPct);
+          setVanos(inputs.vanos || []);
+        }
+      })();
     }
   }, [projectId, partidaId, catalogs, setValue]);
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit: SubmitHandler<FormValues> = (data) => {
     if (!catalogs) return;
     // Ahora 'data' y 'TabiqueInput' son compatibles
     const input: TabiqueInput = { ...data, vanos };
@@ -120,8 +131,8 @@ function TabiqueCalculator() {
         alert("Primero debés calcular los materiales.");
         return;
     };
-    const currentInputs = { ...getValues(), vanos };
-    const item = {
+    const currentInputs: TabiqueInput = { ...getValues(), vanos };
+    const item: BatchItem = {
       kind: "tabique-divisorio",
       title: defaultTitle,
       materials: itemsForProject,
@@ -156,7 +167,7 @@ function TabiqueCalculator() {
 
             <label className="text-sm flex flex-col gap-1">
               <span className="font-medium">Separación Montantes</span>
-              <select {...register("separacionMontantes_cm")} className="w-full px-3 py-2">
+              <select {...register("separacionMontantes_cm", { valueAsNumber: true })} className="w-full px-3 py-2">
                 <option value={40}>Cada 40 cm</option>
                 <option value={60}>Cada 60 cm</option>
               </select>

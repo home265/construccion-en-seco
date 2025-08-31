@@ -17,21 +17,28 @@ export default function AddToProjectBatch({ items, onSaved }: Props) {
   const [newProjectName, setNewProjectName] = useState("");
 
   useEffect(() => {
-    setProjects(listProjects());
+    let cancelled = false;
+    (async () => {
+      const list = await listProjects();
+      if (!cancelled) setProjects(list);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     let projectId = selectedProjectId;
 
     if (projectId === "new") {
-      const newProject = createProject({ name: newProjectName || "Proyecto sin nombre" });
+      const newProject = await createProject({ name: newProjectName || "Proyecto sin nombre" });
       projectId = newProject.id;
     }
     
     // Agregamos cada ítem del lote como una partida
-    items.forEach(item => {
-      addPartida(projectId, item);
-    });
+    for (const item of items) {
+      await addPartida(projectId, item);
+    }
     
     onSaved(); // Limpiamos el lote local
     router.push(`/proyecto/${projectId}`); // Redirigimos al proyecto

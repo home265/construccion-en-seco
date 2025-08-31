@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import { listProjects, createProject, addPartida } from "@/lib/project/storage";
 import { Project, MaterialRow } from "@/lib/project/types";
 
-type Props = {
+type Props<I = unknown, R = unknown> = {
   kind: string;
   defaultTitle: string;
   items: MaterialRow[];
-  raw: any; // El objeto de resultado completo
+  raw: { input: I; result: R }; // aceptamos cualquier forma de input/result
 };
 
-export default function AddToProject({ kind, defaultTitle, items, raw }: Props) {
+export default function AddToProject<I, R>({ kind, defaultTitle, items, raw }: Props<I, R>) {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("new");
@@ -20,30 +20,38 @@ export default function AddToProject({ kind, defaultTitle, items, raw }: Props) 
   const [title, setTitle] = useState(defaultTitle);
 
   useEffect(() => {
-    setProjects(listProjects());
+    let cancelled = false;
+    (async () => {
+      const list = await listProjects();
+      if (!cancelled) setProjects(list);
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
     setTitle(defaultTitle);
   }, [defaultTitle]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     let projectId = selectedProjectId;
 
     if (projectId === "new") {
-      const newProject = createProject({ name: newProjectName || "Proyecto sin nombre" });
+      const newProject = await createProject({ name: newProjectName || "Proyecto sin nombre" });
       projectId = newProject.id;
     }
-    
-    addPartida(projectId, {
+
+    // Cast controlado en la frontera con storage, sin exigir index signature a tus tipos
+    const inputsForStorage = raw.input as unknown as Record<string, unknown>;
+    const outputsForStorage = raw.result as unknown as Record<string, unknown>;
+
+    await addPartida(projectId, {
       kind,
       title,
-      inputs: raw.input, // Asumimos que el objeto raw tiene una clave 'input'
-      outputs: raw.result, // y una clave 'result'
+      inputs: inputsForStorage,
+      outputs: outputsForStorage,
       materials: items,
     });
-    
-    // Redirigir al proyecto
+
     router.push(`/proyecto/${projectId}`);
   };
 

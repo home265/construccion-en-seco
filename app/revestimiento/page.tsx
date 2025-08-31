@@ -2,7 +2,7 @@
 "use client";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
@@ -27,7 +27,7 @@ const formSchema = z.object({
   tipoRevestimiento: z.enum(['directo', 'omega']),
   placaId: z.string().min(1, "Seleccioná una placa"),
   perfilOmegaId: z.string().optional(),
-  separacionOmegas_cm: z.coerce.number().optional(),
+  separacionOmegas_cm: z.number().optional(),
   desperdicioPct: z.number().min(0),
 });
 
@@ -42,8 +42,9 @@ function RevestimientoCalculator() {
   const [vanos, setVanos] = useState<OpeningVM[]>([]);
   const [result, setResult] = useState<RevestimientoResult | null>(null);
   
+  const formResolver: Resolver<FormValues> = zodResolver(formSchema) as Resolver<FormValues>;
   const { register, handleSubmit, watch, setValue, getValues } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: formResolver,
     defaultValues: {
       largo_m: 0,
       alto_m: 0,
@@ -59,22 +60,24 @@ function RevestimientoCalculator() {
   // Lógica de edición desde un proyecto (deep-linking)
   useEffect(() => {
     if (projectId && partidaId && catalogs) {
-      const partida = getPartida(projectId, partidaId);
-      if (partida && partida.inputs) {
-        const inputs = partida.inputs as RevestimientoInput;
-        setValue("largo_m", inputs.largo_m);
-        setValue("alto_m", inputs.alto_m);
-        setValue("tipoRevestimiento", inputs.tipoRevestimiento);
-        setValue("placaId", inputs.placaId);
-        setValue("perfilOmegaId", inputs.perfilOmegaId);
-        setValue("separacionOmegas_cm", inputs.separacionOmegas_cm);
-        setValue("desperdicioPct", inputs.desperdicioPct);
-        setVanos(inputs.vanos || []);
-      }
+      (async () => {
+        const partida = await getPartida(projectId, partidaId);
+        if (partida && partida.inputs) {
+          const inputs = partida.inputs as RevestimientoInput;
+          setValue("largo_m", inputs.largo_m);
+          setValue("alto_m", inputs.alto_m);
+          setValue("tipoRevestimiento", inputs.tipoRevestimiento);
+          setValue("placaId", inputs.placaId);
+          setValue("perfilOmegaId", inputs.perfilOmegaId);
+          setValue("separacionOmegas_cm", inputs.separacionOmegas_cm);
+          setValue("desperdicioPct", inputs.desperdicioPct);
+          setVanos(inputs.vanos || []);
+        }
+      })();
     }
   }, [projectId, partidaId, catalogs, setValue]);
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit: SubmitHandler<FormValues> = (data) => {
     if (!catalogs) return;
     const input: RevestimientoInput = { ...data, vanos };
     const calcResult = calculateRevestimiento(input, catalogs);
@@ -140,7 +143,7 @@ function RevestimientoCalculator() {
                 </label>
                 <label className="text-sm flex flex-col gap-1">
                   <span className="font-medium">Separación Omegas</span>
-                  <select {...register("separacionOmegas_cm")} className="w-full px-3 py-2">
+                  <select {...register("separacionOmegas_cm", { valueAsNumber: true })} className="w-full px-3 py-2">
                     <option value={40}>Cada 40 cm</option>
                     <option value={60}>Cada 60 cm</option>
                   </select>

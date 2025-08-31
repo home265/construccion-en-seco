@@ -2,7 +2,7 @@
 "use client";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
@@ -25,8 +25,8 @@ const formSchema = z.object({
   ancho_m: z.number().min(0.1, "Debe ser mayor a 0"),
   perfilPrimarioId: z.string().min(1, "Seleccioná un perfil"),
   perfilSecundarioId: z.string().min(1, "Seleccioná un perfil"),
-  separacionPrimarios_cm: z.coerce.number(),
-  separacionSecundarios_cm: z.coerce.number(),
+  separacionPrimarios_cm: z.number(),
+  separacionSecundarios_cm: z.number(),
   placaId: z.string().min(1, "Seleccioná una placa"),
   desperdicioPct: z.number().min(0),
 });
@@ -40,9 +40,12 @@ function CielorrasoCalculator() {
 
   const [catalogs, setCatalogs] = useState<Catalogs | null>(null);
   const [result, setResult] = useState<CielorrasoResult | null>(null);
+
+  // Resolver tipado para evitar 'unknown'
+  const formResolver: Resolver<FormValues> = zodResolver(formSchema) as Resolver<FormValues>;
   
   const { register, handleSubmit, watch, setValue, getValues } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: formResolver,
     defaultValues: {
       largo_m: 0,
       ancho_m: 0,
@@ -59,23 +62,25 @@ function CielorrasoCalculator() {
   // Lógica de edición desde un proyecto (deep-linking)
   useEffect(() => {
     if (projectId && partidaId && catalogs) {
-      const partida = getPartida(projectId, partidaId);
-      if (partida && partida.inputs) {
-        const inputs = partida.inputs as CielorrasoInput;
-        setValue("largo_m", inputs.largo_m);
-        setValue("ancho_m", inputs.ancho_m);
-        setValue("perfilPrimarioId", inputs.perfilPrimarioId);
-        setValue("perfilSecundarioId", inputs.perfilSecundarioId);
-        setValue("separacionPrimarios_cm", inputs.separacionPrimarios_cm);
-        setValue("separacionSecundarios_cm", inputs.separacionSecundarios_cm);
-        setValue("placaId", inputs.placaId);
-        setValue("desperdicioPct", inputs.desperdicioPct);
-      }
+      (async () => {
+        const partida = await getPartida(projectId, partidaId);
+        if (partida && partida.inputs) {
+          const inputs = partida.inputs as CielorrasoInput;
+          setValue("largo_m", inputs.largo_m);
+          setValue("ancho_m", inputs.ancho_m);
+          setValue("perfilPrimarioId", inputs.perfilPrimarioId);
+          setValue("perfilSecundarioId", inputs.perfilSecundarioId);
+          setValue("separacionPrimarios_cm", inputs.separacionPrimarios_cm);
+          setValue("separacionSecundarios_cm", inputs.separacionSecundarios_cm);
+          setValue("placaId", inputs.placaId);
+          setValue("desperdicioPct", inputs.desperdicioPct);
+        }
+      })();
     }
   }, [projectId, partidaId, catalogs, setValue]);
 
   // Se llama a la función de cálculo específica para cielorrasos
-  const onSubmit = (data: FormValues) => {
+  const onSubmit: SubmitHandler<FormValues> = (data) => {
     if (!catalogs) return;
     const input: CielorrasoInput = data;
     const calcResult = calculateCielorraso(input, catalogs);
@@ -140,14 +145,14 @@ function CielorrasoCalculator() {
 
              <label className="text-sm flex flex-col gap-1">
               <span className="font-medium">Separación Primarios</span>
-              <select {...register("separacionPrimarios_cm")} className="w-full px-3 py-2">
+              <select {...register("separacionPrimarios_cm", { valueAsNumber: true })} className="w-full px-3 py-2">
                 <option value={120}>Cada 120 cm</option>
                 <option value={80}>Cada 80 cm</option>
               </select>
             </label>
             <label className="text-sm flex flex-col gap-1">
               <span className="font-medium">Separación Secundarios</span>
-              <select {...register("separacionSecundarios_cm")} className="w-full px-3 py-2">
+              <select {...register("separacionSecundarios_cm", { valueAsNumber: true })} className="w-full px-3 py-2">
                 <option value={40}>Cada 40 cm</option>
                 <option value={60}>Cada 60 cm</option>
               </select>

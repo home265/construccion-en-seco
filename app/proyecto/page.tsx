@@ -1,77 +1,112 @@
 // app/proyecto/page.tsx
 "use client";
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { listProjects, deleteProject } from "@/lib/project/storage";
+import { listProjects, createProject, deleteProject } from "@/lib/project/storage";
 import type { Project } from "@/lib/project/types";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
-
 
 export default function ProyectosPage() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [name, setName] = useState("");
   const [toDelete, setToDelete] = useState<Project | null>(null);
 
-  // Carga y recarga la lista de proyectos
-  const refreshProjects = () => {
-    setProjects(listProjects());
-  };
-
+  // Carga inicial (async con Dexie)
   useEffect(() => {
-    refreshProjects();
+    let mounted = true;
+    (async () => {
+      const list = await listProjects();
+      if (mounted) setProjects(list);
+    })();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  const handleDelete = () => {
-    if (toDelete) {
-      deleteProject(toDelete.id);
-      setToDelete(null); // Cierra el modal
-      refreshProjects(); // Actualiza la lista en pantalla
-    }
+  const handleCreate = async () => {
+    const clean = name.trim();
+    if (!clean) return;
+    const p = await createProject({ name: clean });
+    setName("");
+    const list = await listProjects();
+    setProjects(list);
+    // Flujo estilo Gasista: ir directo al cálculo del proyecto
+    router.push(`/proyecto/${p.id}`);
+  };
+
+  const handleDelete = async () => {
+    if (!toDelete) return;
+    await deleteProject(toDelete.id);
+    setToDelete(null);
+    const list = await listProjects();
+    setProjects(list);
   };
 
   return (
-    <section className="container mx-auto px-4 max-w-5xl space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Proyectos</h1>
-        <Link href="/proyecto/nuevo" className="btn">
-          + Nuevo proyecto
-        </Link>
+    <section className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold">Mis Proyectos de Seco</h1>
+        <p className="text-sm text-foreground/70">
+          Crea un proyecto nuevo o continúa con uno existente.
+        </p>
       </div>
 
-      {projects.length === 0 ? (
-        <p className="text-sm text-foreground/60">
-          Aún no hay proyectos. Creá uno nuevo o guardá un cálculo desde una de las calculadoras.
-        </p>
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map((p) => (
-            <div key={p.id} className="card p-4 flex flex-col justify-between">
-              <div>
-                <div className="font-medium">{p.name}</div>
-                <div className="text-xs text-foreground/60">{p.client || "—"}</div>
-              </div>
-              <div className="mt-3 flex gap-2">
-                <button className="btn" onClick={() => router.push(`/proyecto/${p.id}`)}>Abrir</button>
-                <button
-                  type="button"
-                  className="btn-danger"
-                  onClick={() => setToDelete(p)}
-                  title="Eliminar proyecto"
-                >
-                  Eliminar
-                </button>
-              </div>
-            </div>
-          ))}
+      {/* Crear nuevo proyecto */}
+      <div className="card p-4 space-y-3">
+        <h2 className="font-medium">Crear Nuevo Proyecto</h2>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <input
+            placeholder="Ej: Casa Familia Pérez"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full h-10 px-3"
+          />
+          <button className="btn btn-primary h-10" onClick={handleCreate}>
+            Crear y Abrir Calculadora
+          </button>
         </div>
-      )}
+      </div>
 
-      {/* Modal de confirmación para eliminar */}
+      {/* Lista de proyectos existentes */}
+      <div className="card p-4">
+        <h2 className="font-medium mb-3">Proyectos Existentes</h2>
+        {projects.length === 0 ? (
+          <p className="text-sm text-foreground/60">
+            No hay proyectos todavía. ¡Crea el primero!
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {projects.map((p) => (
+              <li
+                key={p.id}
+                className="border rounded p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+              >
+                <span className="font-medium">{p.name}</span>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-shrink-0 w-full sm:w-auto">
+                  <Link className="btn btn-primary text-center" href={`/proyecto/${p.id}`}>
+  Editar/Ver Cálculo
+</Link>
+                  <Link className="btn btn-secondary text-center" href={`/proyecto/${p.id}/export`}>
+                    Ver Resumen y Exportar
+                  </Link>
+                  <button className="btn btn-danger" onClick={() => setToDelete(p)}>
+                    Eliminar
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Modal de confirmación */}
       <ConfirmDialog
         open={!!toDelete}
         title="Eliminar Proyecto"
-        message={`¿Estás seguro de que querés eliminar el proyecto "${toDelete?.name}"? Se borrarán todas sus partidas y esta acción no se puede deshacer.`}
+        message={`¿Estás seguro de eliminar el proyecto “${toDelete?.name ?? ""}”? Se borrarán todas sus partidas y esta acción no se puede deshacer.`}
         confirmLabel="Sí, eliminar"
         onConfirm={handleDelete}
         onCancel={() => setToDelete(null)}

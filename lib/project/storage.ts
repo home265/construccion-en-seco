@@ -1,129 +1,152 @@
 // lib/project/storage.ts
-import type { Project, Partida } from "./types";
+import { db } from "@/lib/db";
+import type { Project, Partida, MaterialRow } from "./types";
 
-const PROJECTS_KEY = "bob_seco_projects_v1";
 const ACTIVE_PROJECT_KEY = "bob_seco_active_project_v1";
+const isBrowser = () => typeof window !== "undefined";
+const now = () => Date.now();
 
-function isBrowser(): boolean {
-  return typeof window !== "undefined";
-}
-
-function readAll(): Project[] {
+// === PROYECTOS ===
+export async function listProjects(): Promise<Project[]> {
   if (!isBrowser()) return [];
-  try {
-    return JSON.parse(localStorage.getItem(PROJECTS_KEY) || "[]");
-  } catch {
-    return [];
-  }
+  // Ordenados por nombre como en Gasista
+  return await db.projects.orderBy("name").toArray();
 }
 
-function writeAll(list: Project[]): void {
-  if (!isBrowser()) return;
-  try {
-    localStorage.setItem(PROJECTS_KEY, JSON.stringify(list));
-  } catch (e) {
-    console.error("Error guardando proyectos:", e);
-  }
+export async function getProject(id: string): Promise<Project | null> {
+  if (!isBrowser()) return null;
+  return (await db.projects.get(id)) ?? null;
 }
 
-export function listProjects(): Project[] {
-  return readAll();
+// (compat) por si algo del código viejo lo usaba
+export async function saveProject(p: Project): Promise<void> {
+  await db.projects.put({ ...p, updatedAt: now() });
 }
 
-export function getProject(id: string): Project | null {
-  return readAll().find((p) => p.id === id) || null;
-}
-
-export function saveProject(p: Project): void {
-  const all = readAll();
-  const i = all.findIndex((x) => x.id === p.id);
-  if (i >= 0) {
-    all[i] = p;
-  } else {
-    all.push(p);
-  }
-  writeAll(all);
-}
-
-// 👇 ESTA ES LA FUNCIÓN CORREGIDA Y SIMPLIFICADA 👇
-export function createProject(data: Partial<Project>): Project {
-  const now = Date.now();
-  
-  const p: Project = {
-    // Propiedades obligatorias con su valor inicial
+export async function createProject(data: { name: string; client?: string; siteAddress?: string; notes?: string; }): Promise<Project> {
+  const t = now();
+  const project: Project = {
     id: crypto.randomUUID(),
-    name: "Nuevo proyecto",
+    name: (data?.name ?? "Nuevo proyecto") || "Nuevo proyecto",
+    client: data?.client ?? "",
+    siteAddress: data?.siteAddress ?? "",
+    notes: data?.notes ?? "",
     partes: [],
-    createdAt: now,
-    updatedAt: now,
-    
-    // Propiedades opcionales con un valor por defecto
-    client: "",
-    siteAddress: "",
-    notes: "",
-    
-    // El 'data' que llega puede sobreescribir los valores por defecto
-    ...data,
+    createdAt: t,
+    updatedAt: t,
   };
-
-  saveProject(p);
-  return p;
+  await db.projects.put(project);
+  return project;
 }
 
-export function deleteProject(projectId: string): void {
+export async function updateProject(
+  id: string,
+  patch: Partial<Omit<Project, "id" | "createdAt" | "partes">>
+): Promise<Project | null> {
+  const current = await getProject(id);
+  if (!current) return null;
+  const updated: Project = {
+    ...current,
+    ...patch,
+    id: current.id,
+    createdAt: current.createdAt,
+    updatedAt: now(),
+  };
+  await db.projects.put(updated);
+  return updated;
+}
+
+export async function deleteProject(projectId: string): Promise<void> {
   if (!isBrowser()) return;
-  const all = readAll();
-  const newList = all.filter((p) => p.id !== projectId);
-  writeAll(newList);
+  await db.projects.delete(projectId);
   if (getActiveProjectId() === projectId) {
-    localStorage.removeItem(ACTIVE_PROJECT_KEY);
+    try { localStorage.removeItem(ACTIVE_PROJECT_KEY); } catch {}
   }
 }
 
-export function addPartida(projectId: string, part: Omit<Partida, "id" | "createdAt">): Partida {
-  const p = getProject(projectId);
-  if (!p) throw new Error("Proyecto no encontrado");
-  const nueva: Partida = { ...part, id: crypto.randomUUID(), createdAt: Date.now() };
-  p.partes.push(nueva);
-  p.updatedAt = Date.now();
-  saveProject(p);
-  return nueva;
-}
+// === PARTIDAS ===
+type AddPartidaData =
+  | { kind: string; title: string; items: MaterialRow[]; raw?: any; inputs?: Record<string, any>; outputs?: Record<string, any> }
+  | Omit<Partida, "id" | "createdAt">;
 
-export function removePartida(projectId: string, partidaId: string): void {
-  const p = getProject(projectId);
-  if (!p) return;
-  p.partes = p.partes.filter((x) => x.id !== partidaId);
-  p.updatedAt = Date.now();
-  saveProject(p);
-}
-
-export function getPartida(projectId: string, partidaId: string): Partida | null {
-  const p = getProject(projectId);
+export async function addPartida(projectId: string, data: AddPartidaData): Promise<Partida | null> {
+  const p = await getProject(projectId);
   if (!p) return null;
-  return p.partes.find(x => x.id === partidaId) || null;
+
+  const t = now();
+  let part: Partida;
+
+  if ("kind" in data && "items" in data) {
+    // Nueva forma: { kind, title, items, raw? }
+    part = {
+      id: crypto.randomUUID(),
+      kind: data.kind,
+      title: (data.title ?? "").trim() || "Cálculo",
+      inputs: (data as any).inputs ?? {},
+      outputs: (data as any).outputs ?? {},
+      materials: data.items,
+      createdAt: t,
+      updatedAt: t,
+    };
+  } else {
+    // Compat: venía una Partida sin id/createdAt
+    const d = data as Omit<Partida, "id" | "createdAt">;
+    part = {
+      ...d,
+      id: crypto.randomUUID(),
+      createdAt: t,
+      updatedAt: t,
+      inputs: (d as any).inputs ?? {},
+      outputs: (d as any).outputs ?? {},
+    };
+  }
+
+  const updatedProject: Project = { ...p, partes: [...p.partes, part], updatedAt: now() };
+  await db.projects.put(updatedProject);
+  return part;
 }
 
-export function updatePartida(projectId: string, partidaId: string, patch: Partial<Omit<Partida, "id" | "createdAt">>): Partida {
-  const p = getProject(projectId);
-  if (!p) throw new Error("Proyecto no encontrado");
-  const i = p.partes.findIndex(x => x.id === partidaId);
-  if (i === -1) throw new Error("Partida no encontrada");
+export async function getPartida(projectId: string, partidaId: string): Promise<Partida | null> {
+  const p = await getProject(projectId);
+  if (!p) return null;
+  return p.partes.find((x) => x.id === partidaId) ?? null;
+}
 
-  const actual = p.partes[i];
-  const actualizado: Partida = {
-    ...actual,
+export async function updatePartida(
+  projectId: string,
+  partidaId: string,
+  patch: Partial<Omit<Partida, "id" | "createdAt">>
+): Promise<Partida | null> {
+  const p = await getProject(projectId);
+  if (!p) return null;
+
+  const i = p.partes.findIndex((x) => x.id === partidaId);
+  if (i === -1) return null;
+
+  const curr = p.partes[i];
+  const next: Partida = {
+    ...curr,
     ...patch,
-    id: actual.id,
-    createdAt: actual.createdAt,
+    id: curr.id,
+    createdAt: curr.createdAt,
+    updatedAt: now(),
   };
 
-  p.partes[i] = actualizado;
-  p.updatedAt = Date.now();
-  saveProject(p);
-  return actualizado;
+  const partes = [...p.partes];
+  partes[i] = next;
+
+  await db.projects.put({ ...p, partes, updatedAt: now() });
+  return next;
 }
 
+export async function removePartida(projectId: string, partidaId: string): Promise<void> {
+  const p = await getProject(projectId);
+  if (!p) return;
+  const partes = p.partes.filter((x) => x.id !== partidaId);
+  await db.projects.put({ ...p, partes, updatedAt: now() });
+}
+
+// === Compatibilidad: “proyecto activo” sigue en localStorage ===
 export function setActiveProjectId(id: string): void {
   if (!isBrowser()) return;
   localStorage.setItem(ACTIVE_PROJECT_KEY, id);

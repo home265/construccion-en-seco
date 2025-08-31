@@ -53,7 +53,11 @@ body{
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
+.header {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(6px);
+}
 /* Selección de texto */
 ::selection{
   background: color-mix(in srgb, var(--color-accent) 35%, transparent);
@@ -77,42 +81,68 @@ input:focus, select:focus, textarea:focus{
   border-color: var(--color-ring);
 }
 
-/* ===== Clases personalizadas que creaste ===== */
-.btn{
-  display:inline-flex; align-items:center; justify-content:center;
-  gap:.5rem; padding:.5rem 1rem; border-radius: 9999px;
-  font-weight:600; transition: transform .04s ease, opacity .2s ease, background-color .2s ease;
-  border:1px solid transparent;
+/* ===== Clases personalizadas que creaste (Botones actualizados) ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: .6rem 1.25rem;
+  border-radius: 12px; /* Esquinas redondeadas, no circulares */
+  font-weight: 600;
+  transition: all .2s ease;
+  border: 1px solid var(--border); /* Borde sutil para todos */
   cursor: pointer;
+  white-space: nowrap; /* Evita que el texto del botón se parta en dos líneas */
 }
-.btn:active{ transform: translateY(1px); }
-.btn:disabled{ opacity:.5; cursor:not-allowed; }
-
-.btn-primary, .btn {
-  background: var(--color-accent); color: #0A1414;
-  border-color: color-mix(in srgb, var(--color-accent) 70%, black);
+.btn:active { 
+  transform: scale(0.98); 
 }
-.btn-primary:hover, .btn:hover { background: color-mix(in srgb, var(--color-accent) 85%, black 15%); }
-
-.btn-secondary{
-  background: var(--color-secondary); color: var(--color-neutral);
-  border-color: color-mix(in srgb, var(--color-secondary) 70%, black);
+.btn:disabled { 
+  opacity:.5; 
+  cursor:not-allowed; 
 }
-.btn-secondary:hover{ background: color-mix(in srgb, var(--color-secondary) 85%, black 15%); }
 
-.btn-danger{
-  background: #991B1B; /* Un rojo oscuro para peligro */
+/* Variante Principal (ej. Crear, Aplicar, Guardar) */
+.btn-primary {
+  background: var(--color-accent); 
+  color: #0A1414;
+  border-color: color-mix(in srgb, var(--color-accent) 80%, black);
+}
+.btn-primary:hover { 
+  background: color-mix(in srgb, var(--color-accent) 90%, #fff 10%); 
+}
+
+/* Variante Secundaria (ej. Ver Resumen, Calcular) */
+.btn-secondary {
+  background: var(--color-secondary); 
   color: var(--color-neutral);
-  border-color: #7F1D1D;
 }
-.btn-danger:hover{ background: #B91C1C; }
+.btn-secondary:hover { 
+  background: color-mix(in srgb, var(--color-secondary) 85%, #000 15%);
+  border-color: var(--color-accent);
+}
 
+/* Variante de Peligro (Eliminar, Quitar) */
+.btn-danger {
+  background: #4a1e1e;
+  color: #fecaca;
+  border-color: #991B1B;
+}
+.btn-danger:hover { 
+  background: #991B1B;
+  color: #fff;
+}
 
-.btn-ghost{
-  background: transparent; color: var(--color-neutral);
+/* Variante Fantasma (Cancelar) */
+.btn-ghost {
+  background: transparent;
+  color: var(--color-neutral);
+}
+.btn-ghost:hover { 
+  background: var(--muted);
   border-color: var(--border);
 }
-.btn-ghost:hover{ background: var(--muted); }
 
 .card{
   background: var(--card);

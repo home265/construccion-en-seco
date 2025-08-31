@@ -9,15 +9,17 @@ export default function NuevoProyectoPage() {
   const [name, setName] = useState("");
   const [client, setClient] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newProject = createProject({
-      name: name || "Proyecto sin nombre",
-      client: client,
-    });
-    // Redirigimos al usuario a la página del nuevo proyecto
-    router.push(`/proyecto/${newProject.id}`);
-  };
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+
+  const newProject = await createProject({
+    name: name || "Proyecto sin nombre",
+    client: client,
+  });
+
+  // cuando la promesa se resuelve, newProject SÍ tiene .id
+  router.push(`/proyecto/${newProject.id}`);
+};
 
   return (
     <section className="container mx-auto px-4 max-w-xl space-y-6">
