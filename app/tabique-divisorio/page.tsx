@@ -246,7 +246,7 @@ function TabiqueCalculator() {
           <div className="space-y-2">
             <h3 className="font-medium flex items-center">
               Vanos a Descontar (Puertas/Ventanas)
-              <HelpPopover>Agrega aquí aberturas para descontar el área de placas, aunque los perfiles para el vano sí se computarán.</HelpPopover>
+              <HelpPopover>Agrega aquí las aberturas para descontar el área de placas, aunque los perfiles para el vano sí se computarán.</HelpPopover>
             </h3>
             <OpeningsGroup items={vanos} onChange={setVanos} />
           </div>
