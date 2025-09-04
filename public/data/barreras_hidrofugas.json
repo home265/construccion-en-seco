@@ -1,0 +1,16 @@
+[
+  {
+    "id": "barrera_hidrofuga_estandar",
+    "nombre": "Barrera de Agua y Viento (Tipo Tyvek)",
+    "descripcion": "Membrana hidrófuga y de vapor para protección de muros exteriores.",
+    "unidad_venta": "rollo_50m2",
+    "m2_por_rollo": 50
+  },
+  {
+    "id": "cinta_barrera_hidrofuga",
+    "nombre": "Cinta Adhesiva para Barrera Hidrófuga",
+    "descripcion": "Cinta para sellar uniones y solapes de la barrera de agua y viento.",
+    "unidad_venta": "rollo_25m",
+    "ml_por_rollo": 25
+  }
+]

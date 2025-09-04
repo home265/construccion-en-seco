@@ -12,35 +12,45 @@ async function loadPlacas(): Promise<Placa[]> {
   return res.json();
 }
 
-async function loadTornilleria(): Promise<Record<string, any>> {
+async function loadTornilleria(): Promise<Record<string, unknown>> {
   const res = await fetch('/data/tornilleria.json');
   return res.json();
 }
 
-async function loadAislantes(): Promise<any[]> {
+async function loadAislantes(): Promise<Record<string, unknown>[]> {
   const res = await fetch('/data/aislantes.json');
   return res.json();
 }
 
-async function loadMasillasCintas(): Promise<Record<string, any>> {
+async function loadMasillasCintas(): Promise<Record<string, unknown>> {
   const res = await fetch('/data/masillas-cintas.json');
   return res.json();
 }
 
-async function loadAccesorios(): Promise<any[]> {
+async function loadAccesorios(): Promise<Record<string, unknown>[]> {
   const res = await fetch('/data/accesorios.json');
   return res.json();
 }
 
-// 👇 1. AGREGAMOS LAS FUNCIONES PARA CARGAR LOS NUEVOS JSONS 👇
-async function loadCargas(): Promise<Record<string, any>> {
+async function loadCargas(): Promise<Record<string, unknown>> {
   const res = await fetch('/data/cargas.json');
   return res.json();
 }
 
-async function loadAnclajes(): Promise<any[]> {
+async function loadAnclajes(): Promise<Record<string, unknown>[]> {
   const res = await fetch('/data/anclajes.json');
   return res.json();
+}
+
+// 👇 NUEVAS FUNCIONES DE CARGA AÑADIDAS 👇
+async function loadAdhesivos(): Promise<Record<string, unknown>[]> {
+    const res = await fetch('/data/adhesivos.json');
+    return res.json();
+}
+
+async function loadBarrerasHidrofugas(): Promise<Record<string, unknown>[]> {
+    const res = await fetch('/data/barreras_hidrofugas.json');
+    return res.json();
 }
 
 
@@ -53,8 +63,10 @@ export async function loadAllCatalogs(): Promise<Catalogs> {
     aislantes,
     masillasCintas,
     accesorios,
-    cargas,     // <--- 2. Agregamos la variable aquí
-    anclajes    // <--- 2. Agregamos la variable aquí
+    cargas,
+    anclajes,
+    adhesivos,
+    barrerasHidrofugas,
   ] = await Promise.all([
     loadPerfiles(),
     loadPlacas(),
@@ -62,8 +74,10 @@ export async function loadAllCatalogs(): Promise<Catalogs> {
     loadAislantes(),
     loadMasillasCintas(),
     loadAccesorios(),
-    loadCargas(), // <--- 3. Y llamamos a la nueva función aquí
-    loadAnclajes(), // <--- 3. Y llamamos a la nueva función aquí
+    loadCargas(),
+    loadAnclajes(),
+    loadAdhesivos(),
+    loadBarrerasHidrofugas(),
   ]);
 
   return {
@@ -73,7 +87,9 @@ export async function loadAllCatalogs(): Promise<Catalogs> {
     aislantes,
     masillasCintas,
     accesorios,
-    cargas,     // <--- 4. Finalmente, las incluimos en el objeto que se devuelve
-    anclajes    // <--- 4. Finalmente, las incluimos en el objeto que se devuelve
+    cargas,
+    anclajes,
+    adhesivos,
+    barrerasHidrofugas,
   };
 }

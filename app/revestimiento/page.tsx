@@ -9,11 +9,11 @@ import { z } from "zod";
 // Componentes
 import ResultTable, { ResultRow } from "@/components/ui/ResultTable";
 import NumberInput from "@/components/ui/NumberInput";
-import OpeningsGroup, { OpeningVM } from "@/components/inputs/OpeningsGroup";
+import OpeningsGroup from "@/components/inputs/OpeningsGroup";
 import AddToProject from "@/components/project/AddToProject";
 
 // Tipos, catálogos, funciones
-import { Catalogs, RevestimientoInput, RevestimientoResult } from "@/lib/types/seco";
+import { Catalogs, RevestimientoInput, RevestimientoResult, Vano } from "@/lib/types/seco";
 import { MaterialRow } from "@/lib/project/types";
 import { loadAllCatalogs } from "@/lib/data/catalogs";
 import { calculateRevestimiento } from "@/lib/calc/revestimiento";
@@ -21,7 +21,7 @@ import { getPartida } from "@/lib/project/storage";
 import { keyToLabel, keyToUnit } from "@/components/ui/result-mappers";
 import HelpPopover from "@/components/ui/HelpPopover";
 
-// Esquema de validación para el formulario de Revestimientos
+// Esquema de validación actualizado
 const formSchema = z.object({
   largo_m: z.number().min(0.1, "Debe ser mayor a 0"),
   alto_m: z.number().min(0.1, "Debe ser mayor a 0"),
@@ -30,6 +30,9 @@ const formSchema = z.object({
   perfilOmegaId: z.string().optional(),
   separacionOmegas_cm: z.number().optional(),
   desperdicioPct: z.number().min(0),
+  // --- NUEVOS CAMPOS ---
+  adhesivoId: z.string().optional(),
+  esRevestimientoExterior: z.boolean(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -40,7 +43,7 @@ function RevestimientoCalculator() {
   const partidaId = searchParams.get("partidaId");
 
   const [catalogs, setCatalogs] = useState<Catalogs | null>(null);
-  const [vanos, setVanos] = useState<OpeningVM[]>([]);
+  const [vanos, setVanos] = useState<Vano[]>([]);
   const [result, setResult] = useState<RevestimientoResult | null>(null);
   
   const formResolver: Resolver<FormValues> = zodResolver(formSchema) as Resolver<FormValues>;
@@ -51,6 +54,7 @@ function RevestimientoCalculator() {
       alto_m: 0,
       tipoRevestimiento: 'omega',
       desperdicioPct: 10,
+      esRevestimientoExterior: false,
     },
   });
 
@@ -58,7 +62,6 @@ function RevestimientoCalculator() {
     loadAllCatalogs().then(setCatalogs);
   }, []);
 
-  // Lógica de edición desde un proyecto (deep-linking)
   useEffect(() => {
     if (projectId && partidaId && catalogs) {
       (async () => {
@@ -72,6 +75,8 @@ function RevestimientoCalculator() {
           setValue("perfilOmegaId", inputs.perfilOmegaId);
           setValue("separacionOmegas_cm", inputs.separacionOmegas_cm);
           setValue("desperdicioPct", inputs.desperdicioPct);
+          setValue("adhesivoId", inputs.adhesivoId); // <-- Se carga el valor guardado
+          setValue("esRevestimientoExterior", inputs.esRevestimientoExterior); // <-- Se carga el valor guardado
           setVanos(inputs.vanos || []);
         }
       })();
@@ -100,7 +105,7 @@ function RevestimientoCalculator() {
       const label = keyToLabel(key) || key;
       const unit = keyToUnit(key);
       rows.push({ label, qty: value, unit });
-      materials.push({ key, label, qty: value, unit });
+      materials.push({ key, label, qty: value, unit: unit });
     }
 
     return { resultRows: rows, itemsForProject: materials, defaultTitle: title };
@@ -117,50 +122,31 @@ function RevestimientoCalculator() {
       <h1 className="text-2xl font-semibold">Calculadora de Revestimientos</h1>
       
       <div className="grid md:grid-cols-2 gap-6">
-        {/* Columna de Inputs */}
         <form onSubmit={handleSubmit(onSubmit)} className="card p-4 space-y-4">
           <div className="grid grid-cols-2 gap-4">
+            {/* --- CAMPOS DE GEOMETRÍA SIN CAMBIOS --- */}
             <NumberInput 
-              label={
-                <span className="flex items-center">
-                  Largo (m)
-                  <HelpPopover>Largo total de la pared que se va a revestir.</HelpPopover>
-                </span>
-              } 
-              value={watch('largo_m')} 
-              onChange={v => setValue('largo_m', v)} 
-              step={0.1} 
+              label={ <span className="flex items-center"> Largo (m) <HelpPopover>Largo total de la pared que se va a revestir.</HelpPopover> </span> } 
+              value={watch('largo_m')} onChange={v => setValue('largo_m', v)} step={0.1} 
             />
             <NumberInput 
-              label={
-                <span className="flex items-center">
-                  Alto (m)
-                  <HelpPopover>Altura de la pared que se va a revestir.</HelpPopover>
-                </span>
-              } 
-              value={watch('alto_m')} 
-              onChange={v => setValue('alto_m', v)} 
-              step={0.1} 
+              label={ <span className="flex items-center"> Alto (m) <HelpPopover>Altura de la pared que se va a revestir.</HelpPopover> </span> } 
+              value={watch('alto_m')} onChange={v => setValue('alto_m', v)} step={0.1} 
             />
             
             <label className="text-sm flex flex-col gap-1 col-span-2">
-              <span className="font-medium flex items-center">
-                Método de Revestimiento
-                <HelpPopover>Elige "Sobre Perfil Omega" para fijar las placas a una estructura metálica, ideal para muros irregulares. Elige "Directo a Muro" para pegar las placas directamente a una pared lisa.</HelpPopover>
-              </span>
+              <span className="font-medium flex items-center">Método de Revestimiento<HelpPopover>Elige "Sobre Perfil Omega" para fijar las placas a una estructura, o "Directo a Muro" para pegarlas a una pared lisa.</HelpPopover></span>
               <select {...register("tipoRevestimiento")} className="w-full px-3 py-2">
                 <option value="omega">Sobre Perfil Omega</option>
                 <option value="directo">Directo a Muro (con adhesivo)</option>
               </select>
             </label>
 
-            {tipoRevestimientoSeleccionado === 'omega' && (
+            {/* --- LÓGICA CONDICIONAL ACTUALIZADA --- */}
+            {tipoRevestimientoSeleccionado === 'omega' ? (
               <>
                 <label className="text-sm flex flex-col gap-1">
-                  <span className="font-medium flex items-center">
-                    Perfil Omega
-                    <HelpPopover>Perfil metálico que se fija al muro para crear la estructura de soporte para las placas.</HelpPopover>
-                  </span>
+                  <span className="font-medium flex items-center">Perfil Omega<HelpPopover>Perfil metálico que se fija al muro para crear la estructura de soporte.</HelpPopover></span>
                   <select {...register("perfilOmegaId")} className="w-full px-3 py-2" defaultValue="">
                      <option value="" disabled>Seleccionar...</option>
                     {catalogs.perfiles.filter(p => p.tipo === 'omega').map(p => (
@@ -169,49 +155,49 @@ function RevestimientoCalculator() {
                   </select>
                 </label>
                 <label className="text-sm flex flex-col gap-1">
-                  <span className="font-medium flex items-center">
-                    Separación Omegas
-                    <HelpPopover>Distancia entre los ejes de los perfiles Omega. Una separación de 40 cm es estándar para mayor rigidez.</HelpPopover>
-                  </span>
+                  <span className="font-medium flex items-center">Separación Omegas<HelpPopover>Distancia entre ejes de los perfiles Omega. 40 cm es estándar.</HelpPopover></span>
                   <select {...register("separacionOmegas_cm", { valueAsNumber: true })} className="w-full px-3 py-2">
                     <option value={40}>Cada 40 cm</option>
                     <option value={60}>Cada 60 cm</option>
                   </select>
                 </label>
               </>
+            ) : (
+                <label className="text-sm flex flex-col gap-1 col-span-2">
+                  <span className="font-medium flex items-center">Tipo de Adhesivo<HelpPopover>Elige el adhesivo según el estado del muro base.</HelpPopover></span>
+                  <select {...register("adhesivoId")} className="w-full px-3 py-2" defaultValue="">
+                    <option value="" disabled>Seleccionar...</option>
+                    {catalogs.adhesivos.map(a => (<option key={String((a as {id:string}).id)} value={String((a as {id:string}).id)}>{String((a as {nombre:string}).nombre)}</option>))}
+                  </select>
+                </label>
             )}
             
             <label className="text-sm flex flex-col gap-1 col-span-2">
-              <span className="font-medium flex items-center">
-                Tipo de Placa
-                <HelpPopover>Selecciona la placa a utilizar. Para exteriores o zonas húmedas, se recomiendan placas cementicias o RH (resistentes a la humedad).</HelpPopover>
-              </span>
+              <span className="font-medium flex items-center">Tipo de Placa<HelpPopover>Selecciona la placa a utilizar. Para exteriores o zonas húmedas, se recomiendan placas cementicias o RH.</HelpPopover></span>
               <select {...register("placaId")} className="w-full px-3 py-2" defaultValue="">
                 <option value="" disabled>Seleccionar...</option>
-                {catalogs.placas.map(p => (
-                  <option key={p.id} value={p.id}>{p.nombre}</option>
-                ))}
+                {catalogs.placas.map(p => (<option key={p.id} value={p.id}>{p.nombre}</option>))}
               </select>
             </label>
           </div>
           
+           {/* --- NUEVO CHECKBOX --- */}
+           <div className="pt-2">
+               <label htmlFor="esRevestimientoExterior" className="flex items-center gap-3 text-sm font-medium">
+                    <input type="checkbox" {...register("esRevestimientoExterior")} id="esRevestimientoExterior" />
+                    Es un revestimiento exterior
+                    <HelpPopover>Marcar esta opción si el revestimiento estará expuesto a la intemperie. Se calculará la barrera de agua y viento.</HelpPopover>
+                </label>
+           </div>
+
           <div className="space-y-2">
-            <h3 className="font-medium flex items-center">
-              Vanos a Descontar (Puertas/Ventanas)
-              <HelpPopover>Aquí puedes restar el área de aberturas para no computar materiales de más. Ingresa las medidas de cada puerta o ventana.</HelpPopover>
-            </h3>
+            <h3 className="font-medium flex items-center">Vanos a Descontar (Puertas/Ventanas)<HelpPopover>Resta el área de aberturas para no computar materiales de más.</HelpPopover></h3>
             <OpeningsGroup items={vanos} onChange={setVanos} />
           </div>
 
           <NumberInput 
-            label={
-              <span className="flex items-center">
-                Desperdicio (%)
-                <HelpPopover>Porcentaje de material extra para compensar cortes y ajustes. Un valor típico es entre 10% y 15%.</HelpPopover>
-              </span>
-            } 
-            value={watch('desperdicioPct')} 
-            onChange={v => setValue('desperdicioPct', v)} 
+            label={ <span className="flex items-center">Desperdicio (%)<HelpPopover>Porcentaje de material extra para compensar cortes y ajustes. Típicamente entre 10% y 15%.</HelpPopover></span> } 
+            value={watch('desperdicioPct')} onChange={v => setValue('desperdicioPct', v)} 
           />
 
           <div className="flex gap-2 pt-2">
@@ -219,13 +205,12 @@ function RevestimientoCalculator() {
           </div>
         </form>
 
-        {/* Columna de Resultados */}
         <div className="space-y-4">
           <ResultTable title="Materiales Estimados" items={resultRows} />
         </div>
       </div>
       
-      {result && (
+      {result && itemsForProject.length > 0 && (
         <AddToProject
           kind="revestimiento"
           defaultTitle={defaultTitle}
@@ -240,7 +225,6 @@ function RevestimientoCalculator() {
   );
 }
 
-// Envoltorio con Suspense para evitar errores de build
 export default function RevestimientoPage() {
   return (
     <Suspense fallback={<div>Cargando...</div>}>

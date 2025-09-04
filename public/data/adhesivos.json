@@ -1,0 +1,14 @@
+[
+  {
+    "id": "adhesivo_placas_estandar",
+    "nombre": "Adhesivo para Placas (Muro Liso)",
+    "descripcion": "Adhesivo estándar para pegar placas de yeso sobre muros lisos y nivelados.",
+    "rendimiento_kg_m2": 2.5
+  },
+  {
+    "id": "adhesivo_placas_irregular",
+    "nombre": "Adhesivo para Placas (Muro Irregular)",
+    "descripcion": "Adhesivo de alta adherencia y relleno para muros con pequeñas irregularidades.",
+    "rendimiento_kg_m2": 4.0
+  }
+]

@@ -9,7 +9,7 @@ export interface Perfil {
   medidas_mm: { ancho: number; alto: number };
   espesor_chapa_mm: number;
   largo_m: number;
-  resistencia_kn_m?: number; // Propiedad añadida para perfiles estructurales
+  resistencia_kn_m?: number;
 }
 
 export interface Placa {
@@ -25,15 +25,25 @@ export interface Placa {
 export interface Catalogs {
   perfiles: Perfil[];
   placas: Placa[];
-  tornilleria: Record<string, any>;
-  aislantes: any[];
-  masillasCintas: Record<string, any>;
-  accesorios: any[];
-  cargas: Record<string, any>; // Catálogo de cargas añadido
-  anclajes: any[]; // Catálogo de anclajes añadido
+  tornilleria: Record<string, unknown>;
+  aislantes: Record<string, unknown>[];
+  masillasCintas: Record<string, unknown>;
+  accesorios: Record<string, unknown>[];
+  cargas: Record<string, unknown>;
+  anclajes: Record<string, unknown>[];
+  // 👇 NUEVOS CATÁLOGOS 👇
+  adhesivos: Record<string, unknown>[];
+  barrerasHidrofugas: Record<string, unknown>[];
 }
 
 // --- Tipos para la Calculadora de Tabiques ---
+export interface Vano {
+  lv: number;
+  hv: number;
+  // 👇 NUEVO CAMPO PARA DIFENCIAR PUERTAS/VENTANAS 👇
+  tipo: 'puerta' | 'ventana';
+}
+
 export interface TabiqueInput {
   largo_m: number;
   alto_m: number;
@@ -42,14 +52,21 @@ export interface TabiqueInput {
   separacionMontantes_cm: number;
   esDoblePlaca: boolean;
   llevaAislante: boolean;
-  aislanteId?: string; // Corregido a opcional
-  vanos: { lv: number; hv: number }[];
+  aislanteId?: string;
+  vanos: Vano[]; // <-- Tipo actualizado
   desperdicioPct: number;
+  // 👇 NUEVOS INPUTS 👇
+  requiereArriostramiento: boolean;
 }
 
 export interface TabiqueResult {
   areaNeta_m2: number;
   materiales: Record<string, number>;
+  // 👇 RESULTADO DE OPTIMIZACIÓN 👇
+  optimizacion?: {
+    montantes: unknown;
+    soleras: unknown;
+  }
 }
 
 
@@ -63,6 +80,9 @@ export interface CielorrasoInput {
   separacionSecundarios_cm: number;
   placaId: string;
   desperdicioPct: number;
+  // 👇 NUEVOS INPUTS 👇
+  alturaCuelgue_cm: number;
+  usaBandaAcustica: boolean;
 }
 
 export interface CielorrasoResult {
@@ -78,9 +98,12 @@ export interface RevestimientoInput {
   tipoRevestimiento: 'directo' | 'omega';
   placaId: string;
   perfilOmegaId?: string;
-  separacionOmegas_cm?: number; // Antes era: 40 | 60;
-  vanos: { lv: number; hv: number }[];
+  separacionOmegas_cm?: number;
+  vanos: Vano[]; // <-- Tipo actualizado
   desperdicioPct: number;
+  // 👇 NUEVOS INPUTS 👇
+  adhesivoId?: string;
+  esRevestimientoExterior: boolean;
 }
 
 export interface RevestimientoResult {
@@ -98,6 +121,8 @@ export interface EntrepisoInput {
   separacionVigas_cm: number;
   tipoCubierta: 'osb' | 'fenolico' | 'placa_cementicia';
   desperdicioPct: number;
+  // 👇 NUEVO INPUT 👇
+  usaBlockings: boolean;
 }
 
 export interface EntrepisoResult {
@@ -106,35 +131,25 @@ export interface EntrepisoResult {
   notaImportante: string;
 }
 
-// --- 👇 NUEVOS TIPOS PARA MURO PORTANTE 👇 ---
+// --- Tipos para Muro Portante ---
 export interface MuroPortanteInput {
-  // Dimensiones del muro que estamos calculando
   largo_m: number;
   alto_m: number;
-
-  // Cargas que soporta el muro
   entrepiso_ancho_apoyo_m: number;
   entrepiso_largo_apoyo_m: number;
   entrepiso_tipo_cubierta: 'osb' | 'placa_cementicia' | 'losa_humeda_liviana';
-  
+  cargaUso_kg_m2: number; // Input más detallado
   tieneTechoArriba: boolean;
   techo_tipo?: 'chapa' | 'teja';
-
-  // Configuración del muro en sí
   placaId: string;
   desperdicioPct: number;
 }
 
 export interface MuroPortanteResult {
-  // Resultados del cálculo de cargas
   cargaEstimada_kg_ml: number;
-
-  // Recomendaciones de la app
   perfilRecomendadoId: string;
   separacionRecomendada_cm: 40 | 60;
   anclajeRecomendadoId: string;
-  
-  // Lista de materiales
   materiales: Record<string, number>;
   notaImportante: string;
 }

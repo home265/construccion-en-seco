@@ -1,5 +1,23 @@
 [
   {
+    "id": "solera_35mm",
+    "nombre": "Solera 35mm",
+    "tipo": "solera",
+    "uso": "cielorraso",
+    "medidas_mm": { "ancho": 35, "alto": 30 },
+    "espesor_chapa_mm": 0.52,
+    "largo_m": 2.6
+  },
+  {
+    "id": "montante_34mm",
+    "nombre": "Montante 34mm",
+    "tipo": "montante",
+    "uso": "cielorraso",
+    "medidas_mm": { "ancho": 34, "alto": 35 },
+    "espesor_chapa_mm": 0.52,
+    "largo_m": 2.6
+  },
+  {
     "id": "solera_70mm",
     "nombre": "Solera 70mm",
     "tipo": "solera",
@@ -17,7 +35,7 @@
     "espesor_chapa_mm": 0.52,
     "largo_m": 2.6
   },
-  {
+    {
     "id": "solera_100mm",
     "nombre": "Solera 100mm",
     "tipo": "solera",
@@ -45,8 +63,8 @@
     "largo_m": 2.6
   },
   {
-    "id": "pgu_100mm",
-    "nombre": "Perfil PGU 100mm",
+    "id": "pgu_100_09",
+    "nombre": "Perfil PGU 100mm (0.9mm)",
     "tipo": "pgu",
     "uso": "estructural",
     "medidas_mm": { "ancho": 100, "alto": 40 },
@@ -54,12 +72,33 @@
     "largo_m": 6
   },
   {
-    "id": "pgc_100mm",
-    "nombre": "Perfil PGC 100mm",
+    "id": "pgc_100_09",
+    "nombre": "Perfil PGC 100mm (0.9mm)",
     "tipo": "pgc",
     "uso": "estructural",
     "medidas_mm": { "ancho": 100, "alto": 40 },
     "espesor_chapa_mm": 0.9,
-    "largo_m": 6
+    "largo_m": 6,
+    "resistencia_kn_m": 15
+  },
+  {
+    "id": "pgc_150_125",
+    "nombre": "Perfil PGC 150mm (1.25mm)",
+    "tipo": "pgc",
+    "uso": "estructural",
+    "medidas_mm": { "ancho": 150, "alto": 45 },
+    "espesor_chapa_mm": 1.25,
+    "largo_m": 6,
+    "resistencia_kn_m": 25
+  },
+  {
+    "id": "pgc_200_16",
+    "nombre": "Perfil PGC 200mm (1.6mm)",
+    "tipo": "pgc",
+    "uso": "estructural",
+    "medidas_mm": { "ancho": 200, "alto": 50 },
+    "espesor_chapa_mm": 1.6,
+    "largo_m": 6,
+    "resistencia_kn_m": 40
   }
 ]

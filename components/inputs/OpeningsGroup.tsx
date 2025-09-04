@@ -2,27 +2,28 @@
 "use client";
 
 import NumberInput from "../ui/NumberInput";
-
-export type OpeningVM = {
-  lv: number; // Largo vano (m)
-  hv: number; // Alto vano (m)
-  sv?: number; // Superficie vano (m²) opcional
-};
+import type { Vano } from "@/lib/types/seco";
 
 type Props = {
-  items: OpeningVM[];
-  onChange: (items: OpeningVM[]) => void;
+  items: Vano[];
+  onChange: (items: Vano[]) => void;
 };
 
 export default function OpeningsGroup({ items, onChange }: Props) {
-  const updateItem = (index: number, field: keyof OpeningVM, value: number) => {
+  const updateItem = (index: number, field: keyof Vano, value: number | string) => {
     const next = [...items];
-    next[index] = { ...next[index], [field]: value };
+    const currentItem = next[index];
+    
+    // Aseguramos que el tipo de dato sea correcto
+    const updatedValue = typeof currentItem[field] === 'number' ? Number(value) : value;
+
+    next[index] = { ...currentItem, [field]: updatedValue };
     onChange(next);
   };
 
   const addItem = () => {
-    onChange([...items, { lv: 0, hv: 0 }]);
+    // Por defecto, se agrega una puerta con medidas estándar para agilizar
+    onChange([...items, { lv: 0.8, hv: 2.05, tipo: 'puerta' }]);
   };
 
   const removeItem = (index: number) => {
@@ -35,7 +36,16 @@ export default function OpeningsGroup({ items, onChange }: Props) {
         {items.map((item, i) => (
           <div key={i} className="card p-3 space-y-2 bg-muted">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-sm">Vano {i + 1}</span>
+              {/* --- INICIO DEL CAMBIO --- */}
+              <select
+                value={item.tipo}
+                onChange={(e) => updateItem(i, "tipo", e.target.value)}
+                className="font-bold text-sm bg-transparent border-0 p-0 focus:ring-0 appearance-none"
+              >
+                <option value="puerta">Puerta {i + 1}</option>
+                <option value="ventana">Ventana {i + 1}</option>
+              </select>
+              {/* --- FIN DEL CAMBIO --- */}
               <button
                 type="button"
                 onClick={() => removeItem(i)}
@@ -45,32 +55,26 @@ export default function OpeningsGroup({ items, onChange }: Props) {
               </button>
             </div>
             <NumberInput
-              label="Longitud (LV)"
-              unit="m"
+              label="Ancho (m)"
               value={item.lv}
               onChange={(v) => updateItem(i, "lv", v)}
               step={0.1}
             />
             <NumberInput
-              label="Altura (HV)"
-              unit="m"
+              label="Alto (m)"
               value={item.hv}
               onChange={(v) => updateItem(i, "hv", v)}
               step={0.1}
             />
-            <div className="text-xs text-foreground/60 pt-1">
-              * Si no se ingresa L y H, se usará la superficie.
-            </div>
           </div>
         ))}
       </div>
-      {/* --- LÍNEA CORREGIDA --- */}
       <button
         type="button"
         onClick={addItem}
-        className="btn btn-secondary text-sm" // Se añade la clase 'btn'
+        className="btn btn-secondary text-sm"
       >
-        + Agregar vano
+        + Agregar Vano
       </button>
     </div>
   );

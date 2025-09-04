@@ -22,5 +22,12 @@
     "diametro_mm": 16,
     "resistencia_corte_kn": 40,
     "resistencia_traccion_kn": 55
+  },
+  {
+    "id": "angulo_anclaje_estructural",
+    "nombre": "Ángulo de Anclaje Estructural",
+    "tipo": "conector",
+    "resistencia_corte_kn": 18,
+    "resistencia_traccion_kn": 15
   }
 ]

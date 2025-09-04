@@ -20,7 +20,7 @@ import { getPartida } from "@/lib/project/storage";
 import { keyToLabel, keyToUnit } from "@/components/ui/result-mappers";
 import HelpPopover from "@/components/ui/HelpPopover";
 
-// Esquema de validación para el formulario de Cielorrasos
+// Esquema de validación actualizado para el formulario de Cielorrasos
 const formSchema = z.object({
   largo_m: z.number().min(0.1, "Debe ser mayor a 0"),
   ancho_m: z.number().min(0.1, "Debe ser mayor a 0"),
@@ -30,6 +30,9 @@ const formSchema = z.object({
   separacionSecundarios_cm: z.number(),
   placaId: z.string().min(1, "Seleccioná una placa"),
   desperdicioPct: z.number().min(0),
+  // --- NUEVOS CAMPOS ---
+  alturaCuelgue_cm: z.number().min(0),
+  usaBandaAcustica: z.boolean(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -42,7 +45,6 @@ function CielorrasoCalculator() {
   const [catalogs, setCatalogs] = useState<Catalogs | null>(null);
   const [result, setResult] = useState<CielorrasoResult | null>(null);
 
-  // Resolver tipado para evitar 'unknown'
   const formResolver: Resolver<FormValues> = zodResolver(formSchema) as Resolver<FormValues>;
   
   const { register, handleSubmit, watch, setValue, getValues } = useForm<FormValues>({
@@ -53,6 +55,8 @@ function CielorrasoCalculator() {
       separacionPrimarios_cm: 120,
       separacionSecundarios_cm: 40,
       desperdicioPct: 10,
+      alturaCuelgue_cm: 20, // <-- Valor por defecto
+      usaBandaAcustica: true, // <-- Valor por defecto
     },
   });
 
@@ -60,7 +64,6 @@ function CielorrasoCalculator() {
     loadAllCatalogs().then(setCatalogs);
   }, []);
 
-  // Lógica de edición desde un proyecto (deep-linking)
   useEffect(() => {
     if (projectId && partidaId && catalogs) {
       (async () => {
@@ -75,16 +78,16 @@ function CielorrasoCalculator() {
           setValue("separacionSecundarios_cm", inputs.separacionSecundarios_cm);
           setValue("placaId", inputs.placaId);
           setValue("desperdicioPct", inputs.desperdicioPct);
+          setValue("alturaCuelgue_cm", inputs.alturaCuelgue_cm); // <-- Se carga el valor guardado
+          setValue("usaBandaAcustica", inputs.usaBandaAcustica); // <-- Se carga el valor guardado
         }
       })();
     }
   }, [projectId, partidaId, catalogs, setValue]);
 
-  // Se llama a la función de cálculo específica para cielorrasos
   const onSubmit: SubmitHandler<FormValues> = (data) => {
     if (!catalogs) return;
-    const input: CielorrasoInput = data;
-    const calcResult = calculateCielorraso(input, catalogs);
+    const calcResult = calculateCielorraso(data, catalogs);
     setResult(calcResult);
   };
   
@@ -103,7 +106,7 @@ function CielorrasoCalculator() {
       const label = keyToLabel(key) || key;
       const unit = keyToUnit(key);
       rows.push({ label, qty: value, unit });
-      materials.push({ key, label, qty: value, unit });
+      materials.push({ key, label, qty: value, unit: unit });
     }
 
     return { resultRows: rows, itemsForProject: materials, defaultTitle: title };
@@ -118,37 +121,19 @@ function CielorrasoCalculator() {
       <h1 className="text-2xl font-semibold">Calculadora de Cielorrasos</h1>
       
       <div className="grid md:grid-cols-2 gap-6">
-        {/* Columna de Inputs */}
         <form onSubmit={handleSubmit(onSubmit)} className="card p-4 space-y-4">
           <div className="grid grid-cols-2 gap-4">
+             {/* --- CAMPOS DE GEOMETRÍA Y PERFILES SIN CAMBIOS --- */}
             <NumberInput 
-              label={
-                <span className="flex items-center">
-                  Largo (m)
-                  <HelpPopover>Largo de la habitación donde se instalará el cielorraso.</HelpPopover>
-                </span>
-              } 
-              value={watch('largo_m')} 
-              onChange={v => setValue('largo_m', v)} 
-              step={0.1} 
+              label={<span className="flex items-center">Largo (m)<HelpPopover>Largo de la habitación.</HelpPopover></span>} 
+              value={watch('largo_m')} onChange={v => setValue('largo_m', v)} step={0.1} 
             />
             <NumberInput 
-              label={
-                <span className="flex items-center">
-                  Ancho (m)
-                  <HelpPopover>Ancho de la habitación donde se instalará el cielorraso.</HelpPopover>
-                </span>
-              } 
-              value={watch('ancho_m')} 
-              onChange={v => setValue('ancho_m', v)} 
-              step={0.1} 
+              label={<span className="flex items-center">Ancho (m)<HelpPopover>Ancho de la habitación.</HelpPopover></span>} 
+              value={watch('ancho_m')} onChange={v => setValue('ancho_m', v)} step={0.1} 
             />
-            
             <label className="text-sm flex flex-col gap-1">
-              <span className="font-medium flex items-center">
-                Perfil Primario
-                <HelpPopover>Son los perfiles principales que se cuelgan del techo original. Generalmente son más robustos (ej: Montante de 70mm).</HelpPopover>
-              </span>
+              <span className="font-medium flex items-center">Perfil Primario<HelpPopover>Perfiles principales que se cuelgan del techo original (ej: Montante 70mm).</HelpPopover></span>
               <select {...register("perfilPrimarioId")} className="w-full px-3 py-2" defaultValue="">
                 <option value="" disabled>Seleccionar...</option>
                 {catalogs.perfiles.filter(p => p.uso === 'cielorraso' || p.uso === 'divisorio').map(p => (
@@ -156,12 +141,8 @@ function CielorrasoCalculator() {
                 ))}
               </select>
             </label>
-
             <label className="text-sm flex flex-col gap-1">
-              <span className="font-medium flex items-center">
-                Perfil Secundario
-                <HelpPopover>Son los perfiles que se atornillan perpendicularmente a los primarios y sobre los cuales se fijan las placas de yeso (ej: Solera de 35mm).</HelpPopover>
-              </span>
+              <span className="font-medium flex items-center">Perfil Secundario<HelpPopover>Perfiles sobre los que se fijan las placas (ej: Solera 35mm).</HelpPopover></span>
               <select {...register("perfilSecundarioId")} className="w-full px-3 py-2" defaultValue="">
                 <option value="" disabled>Seleccionar...</option>
                 {catalogs.perfiles.filter(p => p.uso === 'cielorraso' || p.uso === 'divisorio').map(p => (
@@ -169,66 +150,67 @@ function CielorrasoCalculator() {
                 ))}
               </select>
             </label>
-
-             <label className="text-sm flex flex-col gap-1">
-              <span className="font-medium flex items-center">
-                Separación Primarios
-                <HelpPopover>Distancia entre los ejes de los perfiles primarios. Una separación mayor requiere perfiles más resistentes.</HelpPopover>
-              </span>
+            <label className="text-sm flex flex-col gap-1">
+              <span className="font-medium flex items-center">Separación Primarios<HelpPopover>Distancia entre ejes de perfiles primarios.</HelpPopover></span>
               <select {...register("separacionPrimarios_cm", { valueAsNumber: true })} className="w-full px-3 py-2">
                 <option value={120}>Cada 120 cm</option>
                 <option value={80}>Cada 80 cm</option>
               </select>
             </label>
             <label className="text-sm flex flex-col gap-1">
-              <span className="font-medium flex items-center">
-                Separación Secundarios
-                <HelpPopover>Distancia entre los ejes de los perfiles secundarios. Depende del espesor y tipo de placa a utilizar. 40 cm es lo más común.</HelpPopover>
-              </span>
+              <span className="font-medium flex items-center">Separación Secundarios<HelpPopover>Distancia entre ejes de perfiles secundarios. 40 cm es lo más común.</HelpPopover></span>
               <select {...register("separacionSecundarios_cm", { valueAsNumber: true })} className="w-full px-3 py-2">
                 <option value={40}>Cada 40 cm</option>
                 <option value={60}>Cada 60 cm</option>
               </select>
             </label>
-
             <label className="text-sm flex flex-col gap-1 col-span-2">
-              <span className="font-medium flex items-center">
-                Tipo de Placa
-                <HelpPopover>Elige el tipo de placa de yeso según las necesidades del ambiente (ej: estándar, resistente a la humedad para baños/cocinas, etc.).</HelpPopover>
-              </span>
+              <span className="font-medium flex items-center">Tipo de Placa<HelpPopover>Elige el tipo de placa de yeso a utilizar.</HelpPopover></span>
               <select {...register("placaId")} className="w-full px-3 py-2" defaultValue="">
                 <option value="" disabled>Seleccionar...</option>
-                {catalogs.placas.map(p => (
-                  <option key={p.id} value={p.id}>{p.nombre}</option>
-                ))}
+                {catalogs.placas.map(p => (<option key={p.id} value={p.id}>{p.nombre}</option>))}
               </select>
             </label>
           </div>
           
+           {/* --- INICIO DE NUEVOS INPUTS --- */}
+           <div className="pt-2 space-y-4">
+               <NumberInput
+                    label={
+                        <span className="flex items-center">
+                            Altura de Cuelgue (cm)
+                            <HelpPopover>Distancia vertical desde el techo original hasta la estructura. Ingresar 0 si se fija directo.</HelpPopover>
+                        </span>
+                    }
+                    value={watch('alturaCuelgue_cm')}
+                    onChange={v => setValue('alturaCuelgue_cm', v)}
+                    step={1}
+                />
+               <label htmlFor="usaBandaAcustica" className="flex items-center gap-3 text-sm font-medium">
+                    <input type="checkbox" {...register("usaBandaAcustica")} id="usaBandaAcustica" />
+                    Incluir banda acústica perimetral
+                    <HelpPopover>Mejora la aislación acústica del cielorraso, evitando la transmisión de vibraciones al muro.</HelpPopover>
+                </label>
+           </div>
+           {/* --- FIN DE NUEVOS INPUTS --- */}
+
           <NumberInput 
-            label={
-              <span className="flex items-center">
-                Desperdicio (%)
-                <HelpPopover>Porcentaje de material extra para compensar cortes, roturas o errores. Un valor típico para construcción en seco es entre 10% y 15%.</HelpPopover>
-              </span>
-            } 
+            label={ <span className="flex items-center"> Desperdicio (%) <HelpPopover>Porcentaje de material extra para compensar cortes y ajustes. Típicamente entre 10% y 15%.</HelpPopover> </span> } 
             value={watch('desperdicioPct')} 
             onChange={v => setValue('desperdicioPct', v)} 
           />
 
           <div className="flex gap-2 pt-2">
             <button type="submit" className="btn">Calcular</button>
-            {/* Se puede agregar la lógica de "Lote Local" aquí si se desea */}
           </div>
         </form>
 
-        {/* Columna de Resultados */}
         <div className="space-y-4">
           <ResultTable title="Materiales Estimados" items={resultRows} />
         </div>
       </div>
 
-      {result && (
+      {result && itemsForProject.length > 0 && (
         <AddToProject
           kind="cielorraso"
           defaultTitle={defaultTitle}
@@ -243,7 +225,6 @@ function CielorrasoCalculator() {
   );
 }
 
-// Envoltorio con Suspense para evitar errores de build
 export default function CielorrasoPage() {
   return (
     <Suspense fallback={<div>Cargando...</div>}>
